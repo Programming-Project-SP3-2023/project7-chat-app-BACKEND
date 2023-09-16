@@ -1,0 +1,23 @@
+{
+  "name": "project7-chat-app-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Programming-Project-SP3-2023/project7-chat-app-BACKEND.git"
+  },
+  "author": "Jayson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Programming-Project-SP3-2023/project7-chat-app-BACKEND/issues"
+  },
+  "homepage": "https://github.com/Programming-Project-SP3-2023/project7-chat-app-BACKEND#readme",
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2"
+  }
+}

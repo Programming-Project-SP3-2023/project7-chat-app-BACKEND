@@ -11,7 +11,7 @@ CREATE TABLE [dbo].[Accounts](
 CREATE TABLE [dbo].[Logins](
 	AccountID int NOT NULL PRIMARY KEY,
 	Username varchar(50) NOT NULL,
-	PassswordHash varchar(max) NOT NULL,
+	PasswordHash varchar(max) NOT NULL,
 	FOREIGN KEY (AccountID) REFERENCES Accounts(AccountID)
 )
 
