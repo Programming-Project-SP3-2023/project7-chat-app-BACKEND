@@ -2,6 +2,14 @@ const express = require('express');
 const router = express.Router();
 const sql = require('mssql');
 
+var jsonparser = bodyparser.json();
+
+router.post('/', jsonparser, async (req, est, next) =>{
+    const username = req.body.username;
+    const password = req.body.password;
+
+    
+})
 router.get('/', (req, res, next) =>{
     const sqlConfig = {
         user: process.env.DB_USER,
