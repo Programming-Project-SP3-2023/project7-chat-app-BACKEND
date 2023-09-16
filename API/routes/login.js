@@ -45,8 +45,8 @@ router.post('/', jsonparser, async (req, res, next) => {
         if (!isPasswordValid) {
             return res.status(401).json({ message: 'Invalid username or password' });
         }
-        //Will place a key in .env
-        const jwtSecret = 'key';
+        //Set web token with key taken from .env
+        const jwtSecret = process.env.JWT_SECRET;
         const token = jwt.sign({ AccountID: user.AccountID, username: user.username }, jwtSecret, { expiresIn: '1h' });
         res.status(200).json({ message: 'Login Successful', token, AccountID: user.AccountID });
     } catch (error) {
