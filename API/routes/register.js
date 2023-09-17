@@ -51,7 +51,7 @@ router.post('/', jsonParser, (req, res, next) =>{
         const AccountID = await sql.query`SELECT TOP 1 * FROM Accounts ORDER BY AccountID DESC`
         
 
-        const result2 = await sql.query`INSERT INTO Logins (AccountID, Username, PassswordHash) 
+        const result2 = await sql.query`INSERT INTO Logins (AccountID, Username, PasswordHash) 
         VALUES (${AccountID.recordset[0].AccountID}, ${user.username}, ${user.password})`
         console.dir(result2);
     })
