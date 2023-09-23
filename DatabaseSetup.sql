@@ -1,17 +1,18 @@
 /****** Accounts ******/
 CREATE TABLE [dbo].[Accounts](
-	AccountID int NOT NULL PRIMARY KEY,
+	AccountID int NOT NULL IDENTITY(1,1),
 	Email varchar(50) NOT NULL,
 	DisplayName varchar(50) NOT NULL,
 	Dob date NOT NULL,
 	Avatar varchar(max) NOT NULL,
+	PRIMARY KEY (AccountID)
 )
 
 /****** Logins ******/
 CREATE TABLE [dbo].[Logins](
 	AccountID int NOT NULL PRIMARY KEY,
 	Username varchar(50) NOT NULL,
-	PassswordHash varchar(max) NOT NULL,
+	PasswordHash varchar(max) NOT NULL,
 	FOREIGN KEY (AccountID) REFERENCES Accounts(AccountID)
 )
 
