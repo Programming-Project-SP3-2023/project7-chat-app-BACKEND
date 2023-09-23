@@ -4,6 +4,7 @@ const sql = require('mssql');
 const bcrypt = require('bcrypt');
 const bodyParser = require('body-parser');
 const sqlConfig = require('../config');
+const { stringify } = require('querystring');
 
 var jsonparser = bodyParser.json();
 
@@ -46,5 +47,23 @@ router.post('/', jsonparser, (req, res, next) => {
         })
     }
 });
+
+//return users matching entered name
+router.get('/search', jsonparser, (req, res, next) => {
+    try{
+        sql.connect(sqlConfig.returnServerConfig()).then(async function(){
+            const result = await sql.query('SELECT * FROM Accounts WHERE DisplayName LIKE \'%' + req.body.DisplayName + '%\' ')
+
+            res.status(200).json({
+                Message: "OK",
+                result
+            });
+        });
+    } catch{
+        res.status(400).json({
+            Message: "Server Error"
+        })
+    }
+})
 
 module.exports = router;
