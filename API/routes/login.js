@@ -34,7 +34,7 @@ router.post('/', jsonparser, async (req, res, next) => {
         const result = await pool
             .request()
             .input('username', sql.NVarChar, username) // Corrected data type
-            .query('SELECT AccountID, PassswordHash FROM Logins WHERE Username = @username');
+            .query('SELECT AccountID, PasswordHash FROM Logins WHERE Username = @username');
         
         if (result.recordset.length === 0) {
             return res.status(401).json({ message: 'Invalid username or password' });

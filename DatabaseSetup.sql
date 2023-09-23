@@ -1,10 +1,11 @@
 /****** Accounts ******/
 CREATE TABLE [dbo].[Accounts](
-	AccountID int NOT NULL PRIMARY KEY,
+	AccountID int NOT NULL IDENTITY(1,1),
 	Email varchar(50) NOT NULL,
 	DisplayName varchar(50) NOT NULL,
 	Dob date NOT NULL,
 	Avatar varchar(max) NOT NULL,
+	PRIMARY KEY (AccountID)
 )
 
 /****** Logins ******/

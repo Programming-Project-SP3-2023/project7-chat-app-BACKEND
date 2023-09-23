@@ -9,7 +9,9 @@ const bodyParser = require('body-parser');
 var jsonParser = bodyParser.json()
 
 router.post('/', jsonParser, (req, res, next) =>{
-   const saltRounds = 10;
+    
+    //encrypt the users password
+    const saltRounds = 10;
     let hashedPassword = null;
     bcrypt.genSalt(saltRounds, function(err, salt){
         bcrypt.hash(req.body.password, salt, function(err, hash){
@@ -25,7 +27,6 @@ router.post('/', jsonParser, (req, res, next) =>{
         username: req.body.username,
         password: req.body.password
     }
-    console.log(user);
 
     const sqlConfig = {
         user: process.env.DB_USER,
@@ -42,23 +43,34 @@ router.post('/', jsonParser, (req, res, next) =>{
             trustServerCertificate: true
         }
     }
-
     // submit user to the database
     sql.connect(sqlConfig).then(async function(){
-        const result = await sql.query`INSERT INTO Accounts (Email, DisplayName, Dob) 
-                                VALUES (${user.email}, ${user.name}, ${user.dateOfBirth})`
-        console.dir(result);
+        //check if username is unique
+        var result = await sql.query`SELECT username FROM Logins
+                                       WHERE username = ${user.username}`
 
-        const AccountID = await sql.query`SELECT TOP 1 * FROM Accounts ORDER BY AccountID DESC`
-        
+        if(result.rowsAffected == 0){
+            //insert new user into the database
+            result = await sql.query`INSERT INTO Accounts (Email, DisplayName, Dob, Avatar) 
+            VALUES (${user.email}, ${user.name}, ${user.dateOfBirth}, ${user.name})`
 
-        const result2 = await sql.query`INSERT INTO Logins (AccountID, Username, PasswordHash) 
-        VALUES (${AccountID.recordset[0].AccountID}, ${user.username}, ${user.password})`
-        console.dir(result2);
-    })
+            //select the accountID of the new user
+            const AccountID = await sql.query`SELECT TOP 1 * FROM Accounts ORDER BY AccountID DESC`
 
-    res.status(200).json({
-        Message: "OK"
+            //insert login details into the database
+            result = await sql.query`INSERT INTO Logins (AccountID, Username, PasswordHash) 
+            VALUES (${AccountID.recordset[0].AccountID}, ${user.username}, ${hashedPassword})`
+            
+            //return OK if no issues occured
+            res.status(200).json({
+                Message: "OK"
+            })
+        } else {
+            //return error if username isn't unique
+            res.status(400).json({
+                Message: "Username must be unique"
+            })
+        }
     })
 });
 
