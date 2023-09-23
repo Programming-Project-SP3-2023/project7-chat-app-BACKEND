@@ -16,18 +16,12 @@ app.use(function(req, res, next){
 // import routes
 const registerRoutes = require('./routes/register');
 const loginRoutes = require('./routes/login');
+const friendshipsRoutes = require('./routes/friendships');
 
 //setup all the routes
 app.use('/register', registerRoutes);
 app.use('/Login', loginRoutes);
-
-
-
-app.get('/', function(req,res){
-    sql.connect(sqlConfig);
-    result = sql.query`select * from Accounts`
-    console.dir(result);
-})
+app.use('/friendships', friendshipsRoutes)
 
 //export the app
 module.exports = app;
