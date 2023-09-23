@@ -5,6 +5,7 @@ const env = require('dotenv').config();
 const bcrypt = require('bcrypt');
 const bodyParser = require('body-parser');
 
+
 var jsonParser = bodyParser.json()
 
 router.post('/', jsonParser, (req, res, next) =>{
