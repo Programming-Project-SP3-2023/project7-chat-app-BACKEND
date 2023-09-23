@@ -3,7 +3,6 @@ const router = express.Router();
 const sql = require('mssql');
 const bcrypt = require('bcrypt');
 const bodyParser = require('body-parser');
-const env = require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const sqlConfig = require('../config');
 

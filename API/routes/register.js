@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const sql = require('mssql');
-const env = require('dotenv').config();
 const bcrypt = require('bcrypt');
 const bodyParser = require('body-parser');
 const sqlConfig = require('../config');
