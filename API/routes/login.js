@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 const bodyParser = require('body-parser');
 const env = require('dotenv').config();
 const jwt = require('jsonwebtoken');
+const sqlConfig = require('../config');
 
 var jsonparser = bodyParser.json();
 
@@ -12,24 +13,8 @@ router.post('/', jsonparser, async (req, res, next) => {
     const username = req.body.username;
     const password = req.body.password;
 
-    const sqlConfig = {
-        user: process.env.DB_USER,
-        password: process.env.DB_PASS,
-        database: process.env.DB_DATABASE,
-        server: process.env.DB_HOST,
-        pool: {
-            max: 10,
-            min: 0,
-            idleTimeoutMillis: 30000
-        },
-        options: {
-            encrypt: true,
-            trustServerCertificate: true
-        }
-    };
-
     try {
-        const pool = await sql.connect(sqlConfig);
+        const pool = await sql.connect(sqlConfig.returnServerConfig());
         // Get user's info by username
         const result = await pool
             .request()

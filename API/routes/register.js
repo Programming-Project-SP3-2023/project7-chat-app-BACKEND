@@ -4,7 +4,7 @@ const sql = require('mssql');
 const env = require('dotenv').config();
 const bcrypt = require('bcrypt');
 const bodyParser = require('body-parser');
-
+const sqlConfig = require('../config');
 
 var jsonParser = bodyParser.json()
 
@@ -28,23 +28,8 @@ router.post('/', jsonParser, (req, res, next) =>{
         password: req.body.password
     }
 
-    const sqlConfig = {
-        user: process.env.DB_USER,
-        password: process.env.DB_PASS,
-        database: process.env.DB_DATABASE,
-        server: process.env.DB_HOST,
-        pool: {
-            max: 10,
-            min: 0,
-            idleTimeoutMillis: 30000
-        },
-        options:{
-            Encrypt: true,
-            trustServerCertificate: true
-        }
-    }
     // submit user to the database
-    sql.connect(sqlConfig).then(async function(){
+    sql.connect(sqlConfig.returnServerConfig()).then(async function(){
         //check if username is unique
         var result = await sql.query`SELECT username FROM Logins
                                        WHERE username = ${user.username}`
