@@ -1,12 +1,28 @@
 const sql = require('mssql');
 const fs = require('fs');
 const path = require('path');
+require ('dotenv').config();
 
 
 const tempAvatarDir = path.join(__dirname, 'avatarTemp'); 
 if (!fs.existsSync(tempAvatarDir)) {
     fs.mkdirSync(tempAvatarDir);
 }
+const sqlConfig = {
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_DATABASE,
+    server: process.env.DB_HOST,
+    pool: {
+        max: 10,
+        min: 0,
+        idleTimeoutMillis: 30000
+    },
+    options: {
+        encrypt: true,
+        trustServerCertificate: true
+    }
+};
 // Upload an avatar
 const uploadAvatar = async (req, res) => {
     try {
@@ -25,11 +41,8 @@ const uploadAvatar = async (req, res) => {
         // Write the decoded image data to the temporary file
         fs.writeFileSync(temporaryAvatarPath, imageBuffer);
 
-        // Insert the new avatar data into the Avatars table
-        const sqlConfig = {
-            // Your database configuration
-        };
 
+        //insert avatar
         const pool = await sql.connect(sqlConfig);
         const result = await pool
             .request()
@@ -47,15 +60,27 @@ const uploadAvatar = async (req, res) => {
     }
 };
 
-const getAvatar = async (req, res)=>{
-    try{
+const sql = require('mssql');
 
-    }catch(error){
+const getAvatar = async (req, res) => {
+    try {
+        const userId = req.user.AccountID;
+        const pool = await sql.connect(sqlConfig);
+        const result = await pool
+            .request()
+            .input('userId', sql.Int, userId)
+            .query('SELECT AvatarData FROM Avatars WHERE AccountID = @userId');
+
+        if (result.recordset.length === 0) {
+            return res.status(404).json({ message: 'Avatar not found' });
+        }
+
+        res.status(200).json({ avatarData: result.recordset[0].AvatarData });
+    } catch (error) {
         console.error(error);
-        res.status(500).json({message: 'Server error'});
+        res.status(500).json({ message: 'Server error' });
     }
 };
-
 module.exports={
     uploadAvatar,
 
