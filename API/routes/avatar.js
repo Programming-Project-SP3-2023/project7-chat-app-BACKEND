@@ -1,13 +1,12 @@
 const express = require('express');
 const router = express.Router();
+const avatarController = require('../middleware/avatarController.js');
+const authenticateToken = require('../middleware/authenticateToken');
+
 
 //Upload avatar
-router.post('/upload', avatarController.uploadAvatar);
-
-
-//Change avatar
-router.put('/change', avatarController.changeAvatar);
+router.post('/upload', authenticateToken, avatarController.uploadAvatar);
 
 //Get avatar
-router.get('/:userId', avatarController.getAvatar);
-modile.exports = router;
+router.get('/:userId', authenticateToken, avatarController.getAvatar);
+module.exports = router;

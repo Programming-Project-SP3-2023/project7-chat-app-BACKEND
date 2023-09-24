@@ -10,8 +10,8 @@ if (!fs.existsSync(tempAvatarDir)) {
 // Upload an avatar
 const uploadAvatar = async (req, res) => {
     try {
-
-        const userId = req.user.id;
+        //get account id from the request which included token data
+        const userId = req.user.AccountID;
 
         // get the base64-encoded avatar data from the request
         const avatarData = req.body.avatarData;
