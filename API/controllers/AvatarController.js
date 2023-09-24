@@ -1,13 +1,8 @@
 const sql = require('mssql');
 const fs = require('fs');
-const path = require('path');
 require ('dotenv').config();
 
 
-const tempAvatarDir = path.join(__dirname, 'avatarTemp'); 
-if (!fs.existsSync(tempAvatarDir)) {
-    fs.mkdirSync(tempAvatarDir);
-}
 const sqlConfig = {
     user: process.env.DB_USER,
     password: process.env.DB_PASS,
@@ -26,32 +21,19 @@ const sqlConfig = {
 // Upload an avatar
 const uploadAvatar = async (req, res) => {
     try {
-        //get account id from the request which included token data
+        // account id from req with token data
         const userId = req.user.AccountID;
 
-        // get the base64-encoded avatar data from the request
+        // get the base64 for avatar from req
         const avatarData = req.body.avatarData;
-        const imageBuffer = Buffer.from(avatarData, 'base64');
 
-        // make a filename for the avatar (using the user's ID)
-        const avatarFilename = `${userId}_avatar.png`;
-        //filepath for temp files
-        const temporaryAvatarPath = path.join(tempAvatarDir, avatarFilename);
-
-        // Write the decoded image data to the temporary file
-        fs.writeFileSync(temporaryAvatarPath, imageBuffer);
-
-
-        //insert avatar
+        // Insert the new avatar data into the Avatars table
         const pool = await sql.connect(sqlConfig);
         const result = await pool
             .request()
             .input('userId', sql.Int, userId)
-            .input('avatarData', sql.NVarChar, temporaryAvatarPath)
+            .input('avatarData', sql.NVarChar, avatarData)
             .query('UPDATE Avatars SET AvatarData = @avatarData WHERE AccountID = @userId');
-
-        // Remove the temporary file after it has been updated in the database
-        fs.unlinkSync(temporaryAvatarPath);
 
         res.status(200).json({ message: 'Avatar uploaded successfully' });
     } catch (error) {
