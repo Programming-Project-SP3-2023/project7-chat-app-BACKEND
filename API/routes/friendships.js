@@ -91,4 +91,47 @@ router.get('/friends', jsonparser, (req, res, next) => {
     }
 });
 
+//update the friendship request to accepted
+router.put('/accept', jsonparser, (req, res, next) => {
+    try{
+        //Update the a friendship to accepted that has been sent by another user.
+        sql.connect(sqlConfig.returnServerConfig()).then(async function(){
+            const result = await sql.query`UPDATE Friendships
+                                           SET Status = 'Accepted'
+                                           WHERE RequesterID = ${req.body.OtherUserID}
+                                           AND AddresseeID = ${req.body.currentUserID}`
+            res.status(200).json({
+                Message: "OK"
+            });
+        });
+
+    }catch{
+        res.status(400).json({
+            Message: "Server Error"
+        })
+    }
+});
+
+//delete the friendship or friendship request
+router.delete('/delete', jsonparser, (req, res, next) => {
+    try{
+        //Delete a friendship or friendship request that has been sent by another user.
+        sql.connect(sqlConfig.returnServerConfig()).then(async function(){
+            const result = await sql.query`DELETE FROM Friendships
+                                           WHERE RequesterID = ${req.body.otherUserID}
+                                           AND AddresseeID = ${req.body.currentUserID}
+                                           OR
+                                           AddresseeID = ${req.body.otherUserID}
+                                           AND RequesterID = ${req.body.currentUserID}`
+            res.status(200).json({
+                Message: "OK"
+            });
+        });
+    }catch{
+        res.status(400).json({
+            Message: "Server Error"
+        });
+    }
+});
+
 module.exports = router;
