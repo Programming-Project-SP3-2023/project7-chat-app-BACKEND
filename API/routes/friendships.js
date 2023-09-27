@@ -64,6 +64,31 @@ router.get('/search', jsonparser, (req, res, next) => {
             Message: "Server Error"
         })
     }
-})
+});
+
+//return a list of users friends or friendrequests
+router.get('/friends', jsonparser, (req, res, next) => {
+    try{
+        //select all users from the friendships table that match the users AccountID
+        //client side provides the requested status such as pending or accepted
+        sql.connect(sqlConfig.returnServerConfig()).then(async function(){
+            const result = await sql.query`SELECT * FROM friendships
+
+                                           WHERE RequesterID = ${req.body.currentUserID}
+                                           OR AddresseeID = ${req.body.currentUserID}`
+            // console.dir();
+            const resultJson = JSON.stringify(result.recordsets);
+
+            res.status(200).json({
+                Message: "OK",
+                resultJson
+            });
+        });
+    }catch{
+        res.status(400).json({
+            Message: "Server Error"
+        })
+    }
+});
 
 module.exports = router;
