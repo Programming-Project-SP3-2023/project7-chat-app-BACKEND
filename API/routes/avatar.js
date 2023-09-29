@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const avatarController = require('../../controllers/avatarController.js');
-const authenticateToken = require('../../middleware/authenticateToken');
+const avatarController = require('../controllers/avatarController.js');
+const authenticateToken = require('../middleware/authenticateToken');
 
 
 //Upload avatar

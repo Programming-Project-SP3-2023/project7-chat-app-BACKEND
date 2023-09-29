@@ -21,6 +21,7 @@ const sqlConfig = {
 // Upload an avatar
 const uploadAvatar = async (req, res) => {
     try {
+        console.log('Upload avatar route reached.'); // TODO - delete
         // account id from req with token data
         const userId = req.user.AccountID;
 
@@ -41,8 +42,6 @@ const uploadAvatar = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
-
-const sql = require('mssql');
 
 const getAvatar = async (req, res) => {
     try {

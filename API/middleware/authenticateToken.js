@@ -12,6 +12,8 @@ function authenticateToken(req, res, next) {
         if (err) {
             return res.status(403).json({ message: 'Forbidden' });
         }
+        // Log a message indicating successful token validation
+        console.log('Token validated successfully for user:', user);
         req.user = user; 
         next();
     });
