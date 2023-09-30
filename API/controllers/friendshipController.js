@@ -27,7 +27,7 @@ function sendRequest(requester, requestee, res){
             if(result.recordsets == 0){
                 result = await sql.query`INSERT INTO Friendships (RequesterID, AddresseeID, Status)
                                          Values (${friendship.Requester}, ${friendship.requestee}, 'Pending')`
-                res.status(200).json({
+                return res.status(200).json({
                     Message: "OK"
                 });
             } else {
@@ -43,9 +43,10 @@ function sendRequest(requester, requestee, res){
     }
 }
 
+//accept a friend request
 function acceptRequest(currentUserID, OtherUserID, res){
     try{
-        //Update the a friendship to accepted that has been sent by another user.
+        
         sql.connect(sqlConfig.returnServerConfig()).then(async function(){
             const result = await sql.query`UPDATE Friendships
                                            SET Status = 'Accepted'
@@ -63,6 +64,7 @@ function acceptRequest(currentUserID, OtherUserID, res){
     }
 }
 
+//delete a friendship or friendship request
 function deleteFriendship(currentUserID, otherUserID, res){
     try{
         //Delete a friendship or friendship request that has been sent by another user.
@@ -112,18 +114,16 @@ function returnFriendsList(currentUserID, res){
 
                                            WHERE RequesterID = ${currentUserID}
                                            OR AddresseeID = ${currentUserID}`
-            // console.dir();
-            const resultJson = JSON.parse(result.recordsets);
 
             return res.status(200).json({
                 Message: "OK",
-                resultJson
+                result
             });
         });
     }catch{
         return res.status(400).json({
             Message: "Server Error"
-        })
+        });
     }
 }
 
