@@ -16,10 +16,12 @@ app.use(function(req, res, next){
 // import routes
 const registerRoutes = require('./routes/register');
 const loginRoutes = require('./routes/login');
+const avatarRoutes = require('./routes/avatar');
 
 //setup all the routes
 app.use('/register', registerRoutes);
-app.use('/Login', loginRoutes);
+app.use('/login', loginRoutes);
+app.use('/avatar', avatarRoutes)
 
 
 
