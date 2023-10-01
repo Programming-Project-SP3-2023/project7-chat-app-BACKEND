@@ -61,3 +61,11 @@ CREATE TABLE [dbo].[ChannelMembers](
 	FOREIGN KEY (ChannelID) REFERENCES Channels(ChannelID),
 	CONSTRAINT PK_ChannelMembers PRIMARY KEY (MemberID, ChannelID)
 )
+/****** Avatars ******/
+CREATE TABLE [dbo].[Avatars](
+	AvatarID int NOT NULL IDENTITY(1,1),
+	AccountID int NOT NULL,
+	AvatarData varchar(max) NOT NULL,
+	PRIMARY KEY (AvatarID),
+	FOREIGN KEY (AccountID) REFERENCES Accounts(AccountID)
+)
