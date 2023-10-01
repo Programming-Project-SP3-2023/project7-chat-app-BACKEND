@@ -130,9 +130,7 @@ Searching for friends is called by sending a GET request to:
 ### Example Input:
 
     { 
-        "currentUserID": "5",
-        "otherUserID": "4",
-        "JWT Token": "TokenString"
+        "DisplayName": "name"
     }
 
 ### Response Codes
