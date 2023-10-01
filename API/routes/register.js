@@ -51,7 +51,7 @@ router.post('/', jsonParser, (req, res, next) =>{
             })
         } else {
             //return error if username isn't unique
-            res.status(400).json({
+            res.status(401).json({
                 Message: "Username must be unique"
             })
         }
