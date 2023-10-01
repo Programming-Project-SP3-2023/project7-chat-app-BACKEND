@@ -97,7 +97,7 @@ ___
 <br>
 
 <!-- Delete -->
-### Deleting a friend / friend 
+### Deleting a friend / friendhip request
 Deleting a friend or friend request is called by sending a DELETE request to:
     
     Https:/localhost:4000/friendships/delete
