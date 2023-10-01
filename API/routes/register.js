@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const sql = require('mssql');
-const env = require('dotenv').config();
 const bcrypt = require('bcrypt');
 const bodyParser = require('body-parser');
 const sqlConfig = require('../config');
@@ -52,7 +51,7 @@ router.post('/', jsonParser, (req, res, next) =>{
             })
         } else {
             //return error if username isn't unique
-            res.status(400).json({
+            res.status(401).json({
                 Message: "Username must be unique"
             })
         }
