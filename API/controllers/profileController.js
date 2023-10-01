@@ -55,7 +55,26 @@ const updatePassword = async (req, res, next) => {
 
 //Edit displayname
 const editDisplayname = async (req, res, next) =>{
-    //edit displayname
+    try{
+        //get id from token
+        const userId = req.user.AccountID;
+
+        //get new name from request
+        const newDisplayName = req.body.newDisplayName;
+
+        //db connection
+        const pool = await sql.connect(sqlConfig);
+        await pool
+        .request()
+        .input(('userId', sql.Int, userId))
+        .input('newDisplayName', sql.NVarChar, newDisplayName)
+        .query ('UPDATE Accounts SET DisplayName = @newDisplayName WHERE AccountID = @userId');
+        res.status(200).json({message: 'Display name updated successfully'});
+    }catch (error){
+        console.error(error);
+        res.status(500).json({message: 'Server error'});
+    }
+    }
 };
 
 
