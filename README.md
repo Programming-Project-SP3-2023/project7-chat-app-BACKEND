@@ -5,14 +5,6 @@
 Registering a new account is done by sending a POST request to:
  - Https:/localhost:4000/register
 
-The call requires the following information in JSON format added to the body of the call
-    
-    Name (string)
-    email (string)
-    dateOfBirth (date)
-    username (string)
-    password (string)
-
 Successful registration calls will return a status code of 200.
 
 Unsuccesful registration calls will return a status code of 401.
@@ -36,11 +28,6 @@ Unsuccesful registration calls will return a status code of 401.
 Submitting a login request to the backend is done by sending a POST request to:
     
     Https:/localhost:4000/login
-
-The call requires the following information added to the body submitted as JSON
-    
-    Username
-    Password
 
 Successful login registration will return a status code of 200 and a JWT token.
 
