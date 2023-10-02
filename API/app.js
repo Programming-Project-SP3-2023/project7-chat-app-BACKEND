@@ -17,7 +17,7 @@ app.use(function(req, res, next){
 const registerRoutes = require('./routes/register');
 const loginRoutes = require('./routes/login');
 const avatarRoutes = require('./routes/avatar');
-const profileRoutes = require('./routers/profile');
+const profileRoutes = require('./routes/profile');
 
 
 //setup all the routes

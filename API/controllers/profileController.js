@@ -5,10 +5,9 @@ const env = require('dotenv').config();
 const bcrypt = require('bcrypt');
 const bodyParser = require('body-parser');
 const sqlConfig = require('../config/sqlConfig');
+const authenticateToken = require('../middleware/authenticateToken');
 
 var jsonParser = bodyParser.json();
-
-const authenticateToken = require('../middleware/authenticateToken');
 
 // Update password
 const updatePassword = async (req, res, next) => {
@@ -25,6 +24,7 @@ const updatePassword = async (req, res, next) => {
             .request()
             .input('userId', sql.Int, userId)
             .query('SELECT PasswordHash FROM Logins WHERE AccountID = @userId');
+            console.error('Database connection established and results returned.');
         if (result.recordset.length === 0) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -66,7 +66,7 @@ const editDisplayname = async (req, res, next) =>{
         const pool = await sql.connect(sqlConfig);
         await pool
         .request()
-        .input(('userId', sql.Int, userId))
+        .input('userId', sql.Int, userId)
         .input('newDisplayName', sql.NVarChar, newDisplayName)
         .query ('UPDATE Accounts SET DisplayName = @newDisplayName WHERE AccountID = @userId');
         res.status(200).json({message: 'Display name updated successfully'});
