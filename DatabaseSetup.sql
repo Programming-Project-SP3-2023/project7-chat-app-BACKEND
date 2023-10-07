@@ -21,6 +21,7 @@ CREATE TABLE [dbo].[Friendships](
 	RequesterID int NOT NULL,
 	AdresseeID int NOT NULL,
 	Status varchar(50) NOT NULL,
+	ChatID int NOT NULL,
 	FOREIGN KEY (RequesterID) REFERENCES Accounts(AccountID),
 	FOREIGN KEY (AdresseeID) REFERENCES Accounts(AccountID),
 	CONSTRAINT PK_Friendships PRIMARY KEY (RequesterID, AdresseeID)
