@@ -1,8 +1,8 @@
 const ioSvr = require("socket.io");
-const socketData = require('./middleware/socketData');
+const socketData = require('./socketData');
 
 
-function initialiseSockets() {
+function initialiseSockets(server) {
     const io = ioSvr(server, {
         cors: { //cross orgin scripting
             origin: ("http://localhost:3000"), //origin set to whatever front end URL is - this is **mandatory**
