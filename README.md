@@ -185,3 +185,78 @@ ___
 
 <!---------------------- Avatars ---------------------------------->
 ## Avatars
+<!-- upload Avatar -->
+### uploading an avatar
+Post request to:
+    
+    Https:/localhost:4000/avatar/upload
+
+### Example Input
+    Headers: new Headers({
+        'Authorization': 'JWT_TOKEN'
+    }),
+    Body: { 
+        "currentUserID": "5",
+        "avatarData": "avatarData"
+    }
+
+<!-- Get Avatar -->
+### Getting a avatar
+    
+    Https:/localhost:4000/avatar/:userId
+
+### Example Input
+    Headers: new Headers({
+        'Authorization': 'JWT_TOKEN'
+    }),
+    Body: { 
+        "AccountID": "5",
+        "avatarData": "avatarData"
+    }
+
+
+<!---------------------- Profiles ---------------------------------->
+## Profiles
+<!-- update password -->
+### upadting a password
+PUT request to:
+    
+    Https:/localhost:4000/profile/update-password
+
+### Example Input
+    Body: { 
+        "AccountID": "5",
+        "currentPassword": "password01",
+        "newPassword": "newPassword01",
+    }
+
+<!-- update display name -->
+### upadting a display name
+PUT request to:
+    
+    Https:/localhost:4000/profile/edit-displayname
+
+### Example Input
+    Body: { 
+        "currentUserID": "5",
+        "newDisplayName": "Bill Nye"
+    }
+
+
+<!-- update password -->
+### get user info
+GET request to:
+    
+    Https:/localhost:4000/profile/user-info
+
+### Example Input
+    Body: { 
+        "currentUserID": "1234"
+    }
+
+### Example output
+    {
+        "email": "slimshaddy@gmail.com"
+        "displayName": "Real Slim"
+        "dob": "1972-10-17"
+    }
