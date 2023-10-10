@@ -1,6 +1,6 @@
 /****** Accounts ******/
 CREATE TABLE [dbo].[Accounts](
-	AccountID int NOT NULL IDENTITY(1,1),
+	AccountID int NOT NULL IDENTITY(1000,1),
 	Email varchar(50) NOT NULL,
 	DisplayName varchar(50) NOT NULL,
 	Dob date NOT NULL,
@@ -18,13 +18,12 @@ CREATE TABLE [dbo].[Logins](
 
 /****** Friendships ******/
 CREATE TABLE [dbo].[Friendships](
+	FriendshipID int NOT NULL PRIMARY KEY,
 	RequesterID int NOT NULL,
 	AdresseeID int NOT NULL,
 	Status varchar(50) NOT NULL,
-	ChatID int NOT NULL,
 	FOREIGN KEY (RequesterID) REFERENCES Accounts(AccountID),
-	FOREIGN KEY (AdresseeID) REFERENCES Accounts(AccountID),
-	CONSTRAINT PK_Friendships PRIMARY KEY (RequesterID, AdresseeID)
+	FOREIGN KEY (AdresseeID) REFERENCES Accounts(AccountID)
 )
 
 /****** Groups ******/
@@ -69,4 +68,13 @@ CREATE TABLE [dbo].[Avatars](
 	AvatarData varchar(max) NOT NULL,
 	PRIMARY KEY (AvatarID),
 	FOREIGN KEY (AccountID) REFERENCES Accounts(AccountID)
+)
+/*			Messages		*/
+CREATE TABLE [dbo].[Messages](
+	MessageID int NOT NULL PRIMARY KEY IDENTITY(1,1),
+	ChatID int NOT NULL,
+	MessageBody varchar(50),
+	SenderID int NOT NULL,
+	TimeSent datetime NOT NULL,
+	FOREIGN KEY (ChatID) REFERENCES Friendships(FriendshipID)
 )

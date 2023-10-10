@@ -1,6 +1,6 @@
 const ioSvr = require("socket.io");
-const socketData = require('./socketData');
-
+const chatData = require('./chatData');
+const friendshipController = require('../controllers/friendshipController')
 
 function initialiseSockets(server) {
     const io = ioSvr(server, {
@@ -9,68 +9,74 @@ function initialiseSockets(server) {
         }
     });
 
+    //called on socket.connect()
     io.use(async (socket, next) => {
-        //check if session already exists and is active
-        const sessionID = socket.handshake.auth.sessionID;
-        if (sessionID) {
-            console.log("found session!");
-            const session = socketData.findSession(sessionID);
-            if (session) {
-                socket.sessionID = sessionID;
-                socket.userID = session.userID;
-                socket.username = session.username;
-                return next();
-            }
-        }
-        //otherwise, create new session
-        const username = socket.handshake.auth.username;
-        if (!username) {
-            return next(new Error("Invalid Username"));
-        }
+        const accountID = socket.handshake.auth.accountID;
+        console.log(accountID);
+
         //you can assign any attirubtes to the socket
-        socket.sessionID = socketData.getRandomID();
-        socket.userID = socketData.getRandomID();
-        socket.username = username;
         next();
     });
 
     //this remains active for every connection, all the time.
     io.on("connection", (socket) => {
         console.log("Connection established. With username " + socket.username);
-        //send session data to front
-        socket.emit("session", {
-            sessionID: socket.sessionID,
-            userID: socket.userID,
-        });
+        let currentChatID = null;
 
-        const users = [];
-        //broadcast all current socket users to all users
-        //change this to pull only friends of user later
-        for (let [id, socket] of io.of("/").sockets) {
-            users.push({
-                userID: id,
-                username: socket.username,
-            });
+        const friends = [];
+        //grab all connections as globalsocket
+        for (let [accountID, globalSocket] of io.of("/").sockets) {
+            //add only valid friendships to the array
+            console.log(socket.accountID + " and "+ globalSocket.accountID)
+            if(friendshipController.isActiveFriend(socket.accountID, globalSocket.accountID)){
+                friends.push({
+                    accountID: accountID,
+                    username: globalSocket.username,
+                });
         }
-        socket.emit("users", users);
+        }
+        socket.emit("online-friends", friends);
+
+        //need to send chat history for current user
+
+
 
         //refresh and notify all users of the new connection
         //socket.broadcast.emit will broadcast to all except the socket itself (the connection instance)
         //if you want to broadcast to all including itself, use io.emit
-        socket.broadcast.emit("userconnected", {
+        socket.broadcast.emit("user-connected", {
             userID: socket.id,
             username: socket.username,
         });
+        //new
+        socket.on("connect-chat", ({accountID, friendAccountID}) => {
+            //if socket is currently in a chat, leave the chat
+            if(currentChatID){
+                socket.leave(currentChatID);
+                currentChatID = null;
+            }
+            currentChatID = chatData.generateChatID(accountID,friendAccountID);
+            if(currentChatID){
+            socket.join(currentChatID);
+            }
+            else{
+                next(new Error("Error joining chat"));
+            }
+        })
 
-        socket.on("privatemessage", ({ message, to }) => {
-            console.log(message + " " + to);
-            socket.to(to).emit("privatemessage", {
-                message,
-                from: socket.username
-            });
+        socket.on("private-message", ({ message }) => {
+            if(currentChatID){
+                socket.to(currentChatID).emit("private-message", {
+                    message,
+                    from: socket.username
+                });
+            }
+            else{
+                next(new Error("No chat selected"));
+            }
         });
 
-        //sub socket functions trigger on action
+
 
         socket.on('chatmsg', (message) => {
             io.emit('chatmsg', message, socket.username, socket.id);
