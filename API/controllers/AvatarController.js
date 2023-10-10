@@ -1,23 +1,8 @@
 const sql = require('mssql');
 const fs = require('fs');
 require ('dotenv').config();
+const sqlConfig = require('../config');
 
-
-const sqlConfig = {
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_DATABASE,
-    server: process.env.DB_HOST,
-    pool: {
-        max: 10,
-        min: 0,
-        idleTimeoutMillis: 30000
-    },
-    options: {
-        encrypt: true,
-        trustServerCertificate: true
-    }
-};
 // Upload an avatar
 const uploadAvatar = async (req, res) => {
     try {
@@ -29,7 +14,7 @@ const uploadAvatar = async (req, res) => {
         const avatarData = req.body.avatarData;
 
         // Insert the new avatar data into the Avatars table
-        const pool = await sql.connect(sqlConfig);
+        const pool = await sql.connect(sqlConfig.returnServerConfig());
         const result = await pool
             .request()
             .input('userId', sql.Int, userId)
@@ -46,7 +31,7 @@ const uploadAvatar = async (req, res) => {
 const getAvatar = async (req, res) => {
     try {
         const userId = req.user.AccountID;
-        const pool = await sql.connect(sqlConfig);
+        const pool = await sql.connect(sqlConfig.returnServerConfig());
         const result = await pool
             .request()
             .input('userId', sql.Int, userId)

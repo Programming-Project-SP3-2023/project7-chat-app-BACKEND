@@ -53,11 +53,12 @@ Sending a friend request is called by sending a POST request to:
     Https:/localhost:4000/friendships/request
 
 ### Example Input:
-
-    { 
+    Headers: new Headers({
+        'Authorization': 'JWT_TOKEN'
+    }),
+    Body: { 
         "requesterID": "4",
-        "requesteeID": "5",
-        "JWT Token": "TokenString"
+        "requesteeID": "5"
     }
 
 ### Response Codes
@@ -78,11 +79,12 @@ Accepting a friend request is called by sending a PUT request to:
     Https:/localhost:4000/friendships/accept
 
 ### Example Input:
-
-    { 
+    Headers: new Headers({
+        'Authorization': 'JWT_TOKEN'
+    }),
+    Body: { 
         "currentUserID": "5",
-        "requesterID": "4",
-        "JWT Token": "TokenString"
+        "requesterID": "4"
     }
 
 ### Response Codes
@@ -103,11 +105,12 @@ Deleting a friend or friend request is called by sending a DELETE request to:
     Https:/localhost:4000/friendships/delete
 
 ### Example Input:
-
-    { 
+    Headers: new Headers({
+        'Authorization': 'JWT_TOKEN'
+    }),
+    Body: { 
         "currentUserID": "5",
-        "requesterID": "4",
-        "JWT Token": "TokenString"
+        "requesterID": "4"
     }
 
 ### Response Codes
@@ -152,11 +155,12 @@ Getting a users friendlist is called by sending a GET request to:
     Https:/localhost:4000/friendships/friends
 
 ### Example Input:
-
-    { 
+    Headers: new Headers({
+        'Authorization': 'JWT_TOKEN'
+    }),
+    Body: { 
         "currentUserID": "5",
-        "status": "Pending",  <-- for active friendships, status will be "Active" -->
-        "JWT Token": "TokenString"
+        "status": "Pending" <-- for active friendships, status will be "Active" -->
     }
 
 ### Response Codes
@@ -181,3 +185,78 @@ ___
 
 <!---------------------- Avatars ---------------------------------->
 ## Avatars
+<!-- upload Avatar -->
+### uploading an avatar
+Post request to:
+    
+    Https:/localhost:4000/avatar/upload
+
+### Example Input
+    Headers: new Headers({
+        'Authorization': 'JWT_TOKEN'
+    }),
+    Body: { 
+        "currentUserID": "5",
+        "avatarData": "avatarData"
+    }
+
+<!-- Get Avatar -->
+### Getting a avatar
+    
+    Https:/localhost:4000/avatar/:userId
+
+### Example Input
+    Headers: new Headers({
+        'Authorization': 'JWT_TOKEN'
+    }),
+    Body: { 
+        "AccountID": "5",
+        "avatarData": "avatarData"
+    }
+
+
+<!---------------------- Profiles ---------------------------------->
+## Profiles
+<!-- update password -->
+### upadting a password
+PUT request to:
+    
+    Https:/localhost:4000/profile/update-password
+
+### Example Input
+    Body: { 
+        "AccountID": "5",
+        "currentPassword": "password01",
+        "newPassword": "newPassword01",
+    }
+
+<!-- update display name -->
+### upadting a display name
+PUT request to:
+    
+    Https:/localhost:4000/profile/edit-displayname
+
+### Example Input
+    Body: { 
+        "currentUserID": "5",
+        "newDisplayName": "Bill Nye"
+    }
+
+
+<!-- update password -->
+### get user info
+GET request to:
+    
+    Https:/localhost:4000/profile/user-info
+
+### Example Input
+    Body: { 
+        "currentUserID": "1234"
+    }
+
+### Example output
+    {
+        "email": "slimshaddy@gmail.com"
+        "displayName": "Real Slim"
+        "dob": "1972-10-17"
+    }

@@ -29,9 +29,27 @@ router.post('/', jsonParser, (req, res, next) =>{
 
     // submit user to the database
     sql.connect(sqlConfig.returnServerConfig()).then(async function(){
-        //check if username is unique
-        var result = await sql.query`SELECT username FROM Logins
-                                       WHERE username = ${user.username}`
+        //check if username  is unique
+        var result = await sql.query`SELECT * FROM Logins
+                                     WHERE username = ${user.username}`
+
+        if(result.rowsAffected != 0){
+            //return error if username isn't unique
+            return res.status(401).json({
+                Message: "Username is taken"
+            });
+        }
+
+        //check if email  is unique
+        result = await sql.query`SELECT * FROM Accounts
+                                     WHERE email = ${user.email}`
+
+        if(result.rowsAffected != 0){
+            //return error if email isn't unique
+            return res.status(401).json({
+                Message: "Email is taken"
+            });
+        }
 
         if(result.rowsAffected == 0){
             //insert new user into the database
@@ -50,10 +68,7 @@ router.post('/', jsonParser, (req, res, next) =>{
                 Message: "OK"
             })
         } else {
-            //return error if username isn't unique
-            res.status(401).json({
-                Message: "Username must be unique"
-            })
+
         }
     })
 });

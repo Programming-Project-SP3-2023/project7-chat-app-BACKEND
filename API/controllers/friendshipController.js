@@ -47,7 +47,7 @@ async function acceptRequest(currentUserID, requesterID, res){
                 const result = await sql.query`UPDATE Friendships
                 SET Status = 'Active'
                 WHERE RequesterID = ${requesterID}
-                AND AddresseeID = ${currentUserID}`
+                AND AdresseeID = ${currentUserID}`
                 
                 return res.status(200).json({
                     Message: "OK"
@@ -80,7 +80,7 @@ async function deleteFriendship(currentUserID, otherUserID, res){
             sql.connect(sqlConfig.returnServerConfig()).then(async function(){
                 const result = await sql.query`DELETE FROM Friendships
                                             WHERE RequesterID = ${otherUserID}
-                                            AND AddresseeID = ${currentUserID}
+                                            AND AdresseeID = ${currentUserID}
                                             OR
                                             AddresseeID = ${otherUserID}
                                             AND RequesterID = ${currentUserID}`
@@ -142,7 +142,7 @@ function returnFriendsList(currentUserID, status, res){
 
                                            WHERE RequesterID = ${currentUserID}
                                            AND Status = ${status}
-                                           OR AddresseeID = ${currentUserID}
+                                           OR AdresseeID = ${currentUserID}
                                            AND Status = ${status}`
 
             const friendships = result.recordsets;
@@ -177,10 +177,10 @@ async function checkForExistingFriendships(currentUserID, otherUserID){
             //check DB for an existing friendrequest
         const query = `Select TOP 1 * FROM Friendships
                                            Where RequesterID = ${currentUserID}
-                                           AND AddresseeID = ${otherUserID}
+                                           AND AdresseeID = ${otherUserID}
                                            
                                            OR RequesterID = ${otherUserID} 
-                                           AND AddresseeID = ${currentUserID}`
+                                           AND AdresseeID = ${currentUserID}`
 
         const result = await sql.query(query);
 
