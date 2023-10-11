@@ -8,7 +8,6 @@ const socketHandler = require('./middleware/socketHandler');
 
 socketHandler.initialiseSockets(server);
 
-console.log("cONFIG: " +config.returnServerConfig());
 
 
 server.listen(port);

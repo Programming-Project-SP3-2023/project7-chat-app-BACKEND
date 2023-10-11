@@ -20,10 +20,10 @@ CREATE TABLE [dbo].[Logins](
 CREATE TABLE [dbo].[Friendships](
 	FriendshipID int NOT NULL PRIMARY KEY,
 	RequesterID int NOT NULL,
-	AdresseeID int NOT NULL,
+	AddresseeID int NOT NULL,
 	Status varchar(50) NOT NULL,
 	FOREIGN KEY (RequesterID) REFERENCES Accounts(AccountID),
-	FOREIGN KEY (AdresseeID) REFERENCES Accounts(AccountID)
+	FOREIGN KEY (AddresseeID) REFERENCES Accounts(AccountID)
 )
 
 /****** Groups ******/

@@ -260,3 +260,90 @@ GET request to:
         "displayName": "Real Slim"
         "dob": "1972-10-17"
     }
+
+<!---------------------- SocketIO Messages ---------------------------------->
+
+<!-------- Connection -------->
+
+### On chat page load, set up the connection using
+const socket = io('{{SERVER_ADDRESS:4000}}', {autoConnect: false});
+### Autoconnect false because we want to connect with our accountID
+
+### Set variables inside socket as so. AccountID will be used to identify users, 
+### username is just for user friendly display
+socket.auth = {accountID};
+socket.username = {Username};
+socket.connect();
+
+<!-------- Back end listeners and emits -------->
+
+<!-- Friend Status (Online friends) -->
+
+### Emit to this to Request list of currently connected friends
+socket.on("getOnlineFriends", () => {
+    
+    })
+### Returns list of friends accountIDs
+socket.emit("onlineFriends", friends);
+
+
+
+<!-- Connecting to chat -->
+
+### Connect to chat using chatID, connects user to the correct chat channel for messaging
+### ChatID should be available from the friends list POST request.
+socket.on("connectChat", ({ chatID }) => {
+    })
+### Returns error if chat is not selected due to server error.
+## Returns full chat history for relevant chatID EG:
+[
+  [
+    {
+      MessageID: 2,
+      ChatID: 10001001,
+      MessageBody: 'Testing Message',
+      SenderID: 1000,
+      TimeSent: 2023-10-11T09:10:05.057Z
+    },
+    {
+      MessageID: 3,
+      ChatID: 10001001,
+      MessageBody: 'Testing Message',
+      SenderID: 1000,
+      TimeSent: 2023-10-11T09:10:05.057Z
+    },
+    {
+      MessageID: 1,
+      ChatID: 10001001,
+      MessageBody: 'Hello!',
+      SenderID: 1000,
+      TimeSent: 2023-10-11T09:05:05.057Z
+    }
+  ]
+]
+
+
+
+<!-- Messaging to chat -->
+
+### Emit messages with privateMessage, no need to include chatID, this is stored when you connect to one. Just send message and timestamp.
+### Returns error if no chat is selected.
+socket.on("privateMessage", ({ message, timestamp }) => {
+    
+})
+
+## Sends message to chat channel, sends message, from:username, and timestamp
+socket.to(chatID).emit("messageResponse", {
+
+});
+
+## Broadcasts when user is typing
+socket.on("typing", (data) => socket.broadcast.emit("typingResponse", data));
+
+## alerts all currently connected users to this socket's connection. use to update online status dynamically 
+socket.broadcast.emit("userConnected", {
+    userID: socket.accountID,
+    username: socket.username,
+});
+
+
