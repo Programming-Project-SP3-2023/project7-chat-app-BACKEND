@@ -38,7 +38,8 @@ const getAvatar = async (req, res) => {
             .query('SELECT AvatarData FROM Avatars WHERE AccountID = @userId');
 
         if (result.recordset.length === 0) {
-            return res.status(404).json({ message: 'Avatar not found' });
+            return res.status(204).json({ message: 'Avatar not found' });
+
         }
 
         res.status(200).json({ avatarData: result.recordset[0].AvatarData });
