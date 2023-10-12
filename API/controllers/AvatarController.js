@@ -13,13 +13,28 @@ const uploadAvatar = async (req, res) => {
         // get the base64 for avatar from req
         const avatarData = req.body.avatarData;
 
-        // Insert the new avatar data into the Avatars table
+        // Check if the user already has an avatar
         const pool = await sql.connect(sqlConfig.returnServerConfig());
-        const result = await pool
+        const existingAvatarResult = await pool
             .request()
             .input('userId', sql.Int, userId)
-            .input('avatarData', sql.NVarChar, avatarData)
-            .query('UPDATE Avatars SET AvatarData = @avatarData WHERE AccountID = @userId');
+            .query('SELECT AvatarData FROM Avatars WHERE AccountID = @userId');
+
+        if (existingAvatarResult.recordset.length === 0) {
+            // If no existing avatar, insert a new one
+            const insertResult = await pool
+                .request()
+                .input('userId', sql.Int, userId)
+                .input('avatarData', sql.NVarChar, avatarData)
+                .query('INSERT INTO Avatars (AccountID, AvatarData) VALUES (@userId, @avatarData)');
+        } else {
+            // If there's an existing avatar, update it
+            const updateResult = await pool
+                .request()
+                .input('userId', sql.Int, userId)
+                .input('avatarData', sql.NVarChar, avatarData)
+                .query('UPDATE Avatars SET AvatarData = @avatarData WHERE AccountID = @userId');
+        }
 
         res.status(200).json({ message: 'Avatar uploaded successfully' });
     } catch (error) {
@@ -27,6 +42,7 @@ const uploadAvatar = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
 
 const getAvatar = async (req, res) => {
     try {
