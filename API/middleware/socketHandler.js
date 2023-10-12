@@ -14,9 +14,8 @@ function initialiseSockets(server) {
 
     //called on socket.connect()
     io.use(async (socket, next) => {
-        const accountID = socket.handshake.auth.accountID;
-        const username = socket.username;
-        console.log(accountID);
+        socket.accountID = socket.handshake.auth.accountID;
+        socket.username = socket.handshake.auth.username;
         next();
     });
 

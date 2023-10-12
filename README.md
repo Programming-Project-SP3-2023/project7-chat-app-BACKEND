@@ -271,8 +271,7 @@ const socket = io('{{SERVER_ADDRESS:4000}}', {autoConnect: false});
 
 ### Set variables inside socket as so. AccountID will be used to identify users, 
 ### username is just for user friendly display
-socket.auth = {accountID};
-socket.username = {Username};
+socket.auth = {accountID, username};
 socket.connect();
 
 <!-------- Back end listeners and emits -------->
