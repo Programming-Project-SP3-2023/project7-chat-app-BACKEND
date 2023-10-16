@@ -7,5 +7,6 @@ const authenticateToken = require('../middleware/authenticateToken');
 router.put('/update-password', authenticateToken, profileController.updatePassword);
 router.put('/edit-displayname', authenticateToken, profileController.editDisplayname);
 router.get('/user-info', authenticateToken, profileController.getUserInfo);
+router.post('/change-email', authenticateToken, profileController.changeEmail);
 
 module.exports = router;

@@ -76,31 +76,65 @@ const editDisplayname = async (req, res, next) =>{
     }
     }
 
-
-    const getUserInfo = async(req, res, next)=>{
-        try{
-            //get id from token
+    //change Email
+    const changeEmail = async (req, res, next) => {
+        try {
+            // Get ID from the token
             const userId = req.user.AccountID;
-            //dbconnect
+    
+            // Get new email from the request
+            const newEmail = req.body.newEmail;
+    
+            // Connect to the database
             const pool = await sql.connect(sqlConfig);
-            //query db to get user info
-            const result = await pool.request()
-            .input('userId', sql.Int, userId)
-            .query('SELECT Email, DisplayName, Dob FROM Accounts WHERE AccountID = @userId');
+    
+            // Update the email in the database
+            await pool
+                .request()
+                .input('userId', sql.Int, userId)
+                .input('newEmail', sql.NVarChar, newEmail)
+                .query('UPDATE Accounts SET Email = @newEmail WHERE AccountID = @userId');
+    
+            res.status(200).json({ message: 'Email updated successfully' });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Server error' });
+        }
+    };
+    
 
-            if (result.recordset.length === 0 ){
-                return res.status(404).json({message: 'user not found'});
+
+    const getUserInfo = async (req, res, next) => {
+        try {
+            // Get id from the token
+            const userId = req.user.AccountID;
+            // Connect to the database
+            const pool = await sql.connect(sqlConfig);
+
+            const result = await pool
+                .request()
+                .input('userId', sql.Int, userId)
+                .query(`
+                    SELECT A.Email, A.DisplayName, A.Dob, L.Username
+                    FROM Accounts A
+                    INNER JOIN Logins L ON A.AccountID = L.AccountID
+                    WHERE A.AccountID = @userId
+                `);
+    
+            if (result.recordset.length === 0) {
+                return res.status(404).json({ message: 'User not found' });
             }
-            //get user info from query result
             const userInfo = {
                 email: result.recordset[0].Email,
                 displayName: result.recordset[0].DisplayName,
                 dob: result.recordset[0].Dob,
+                //add username
+                username: result.recordset[0].Username, 
             };
             res.status(200).json(userInfo);
-        }catch(error){
+        } catch (error) {
             console.error(error);
-            res.status(500).json({message: 'Server error'});
+            res.status(500).json({ message: 'Server error' });
         }
     };
 
@@ -108,4 +142,5 @@ module.exports ={
     updatePassword,
     editDisplayname,
     getUserInfo,
+    changeEmail,
 };
