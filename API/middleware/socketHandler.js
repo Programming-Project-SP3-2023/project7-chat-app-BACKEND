@@ -9,9 +9,6 @@ function initialiseSockets(server) {
         }
     });
 
-    //TESTING
-    chatData.testFunctions();
-
     //called on socket.connect()
     io.use(async (socket, next) => {
         socket.accountID = socket.handshake.auth.accountID;
@@ -62,13 +59,18 @@ function initialiseSockets(server) {
             if (currentChatID) {
                 socket.join(currentChatID);
                 //grab message history for this chat
-                let messages = chatData.getMessageHistory(currentChatID);
+                let messages = chatData.getMessageHistory(currentChatID, 10);
                 socket.emit("messageHistory", messages);
             }
             else {
                 next(new Error("Error joining chat"));
             }
-        })
+        });
+        //request top X messages from database
+        socket.on("moreMessages", ({chatID, num}) => {
+            let messages = chatData.getMessageHistory(chatID, num);
+            socket.emit("messageHistory", messages);
+        });
 
         socket.on("privateMessage", ({ message, timestamp }) => {
             if (currentChatID) {

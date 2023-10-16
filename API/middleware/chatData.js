@@ -13,11 +13,11 @@ function generateChatID(user1, user2) {
     return parseInt(result);
 }
 
-function getMessageHistory(chatID) {
+function getMessageHistory(chatID, num) {
     try {
         sql.connect(sqlConfig.returnServerConfig()).then(async function () {
 
-            const result = await sql.query('SELECT * FROM Messages WHERE ChatID = \'' + chatID + '\' ORDER BY TimeSent DESC');
+            const result = await sql.query('SELECT TOP \''+ num + '\' FROM Messages WHERE ChatID = \'' + chatID + '\' ORDER BY TimeSent DESC');
             const messages = result.recordsets;
             console.log(messages);
 

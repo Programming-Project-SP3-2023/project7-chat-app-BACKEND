@@ -294,7 +294,7 @@ socket.emit("onlineFriends", friends);
 socket.on("connectChat", ({ chatID }) => {
     })
 ### Returns error if chat is not selected due to server error.
-## Returns full chat history for relevant chatID EG:
+## Returns 10 most recent chat messages for relevant chatID EG:
 [
   [
     {
@@ -321,6 +321,10 @@ socket.on("connectChat", ({ chatID }) => {
   ]
 ]
 
+## You can request more messages from database with the chatID and the number of messages
+## Eg you may want just one msg to display in the preview.
+ socket.on("moreMessages", ({chatID, num}) => {
+ });
 
 
 <!-- Messaging to chat -->
