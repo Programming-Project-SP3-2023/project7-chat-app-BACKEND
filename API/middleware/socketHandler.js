@@ -112,7 +112,7 @@ function initialiseSockets(server) {
                 socket.to(chatID).emit("messageResponse", {
                     message,
                     from: socket.username,
-                    timestamp: timestamp,
+                    timestamp: chatData.formatDate(timestamp),
                 });
                 chatData.saveMessage(message, socket.accountID, timestamp, chatID);
             }

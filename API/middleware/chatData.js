@@ -2,6 +2,7 @@ const express = require('express');
 const sql = require('mssql');
 const sqlConfig = require('../config');
 const { stringify } = require('querystring');
+const format = require('date-fns/format');
 
 
 //gets chatid for 1-1 chat between users.
@@ -57,10 +58,15 @@ async function saveMessage(message, accountID, timestamp, currentChatID) {
     }
 }
 
+function formatDate(date){
+    return format(date, 'dd/MM/yyyy HH:mm');
+}
+
 
 
 module.exports = {
     generateChatID,
     getMessageHistory,
     saveMessage,
+    formatDate,
 };
