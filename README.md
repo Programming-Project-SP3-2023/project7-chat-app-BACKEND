@@ -266,19 +266,18 @@ GET request to:
 <!-------- Connection -------->
 
 ### On chat page load, set up the connection using
-const socket = io('{{SERVER_ADDRESS:4000}}', {autoConnect: false});
-### Autoconnect false because we want to connect with our accountID
+const socket = io('{{SERVER_ADDRESS:4000}}');
+### We can autoconnect so server can set up socket requisites for us
 
-### Set variables inside socket as so. AccountID will be used to identify users, 
+### Connect to socket as so, this will set vars,
 ### username is just for user friendly display
-socket.auth = {accountID, username};
-socket.connect();
+socket.emit ("socketConnect", ({accountID, username}));
 
 <!-------- Back end listeners and emits -------->
 
 <!-- Friend Status (Online friends) -->
 
-### Emit to this to Request list of currently connected friends
+### Listen to this to Request list of currently connected friends
 socket.on("getOnlineFriends", () => {
     
     })
@@ -293,7 +292,14 @@ socket.emit("onlineFriends", friends);
 ### ChatID should be available from the friends list POST request.
 socket.on("connectChat", ({ chatID }) => {
     })
-### Returns error if chat is not selected due to server error.
+### Returns connectionResponse as OK if connection successful.
+socket.emit("connectionResponse", {
+                    "response": "OK"
+                });
+
+
+## Get message history, submit with chatID
+socket.on("getMessages", ({chatID}) => {})
 ## Returns 10 most recent chat messages for relevant chatID EG:
 [
   [
@@ -331,7 +337,7 @@ socket.on("connectChat", ({ chatID }) => {
 
 ### Emit messages with privateMessage, no need to include chatID, this is stored when you connect to one. Just send message and timestamp.
 ### Returns error if no chat is selected.
-socket.on("privateMessage", ({ message, timestamp }) => {
+socket.on("sendMessage", ({ chatID, message }) => {
     
 })
 
@@ -340,8 +346,6 @@ socket.to(chatID).emit("messageResponse", {
 
 });
 
-## Broadcasts when user is typing
-socket.on("typing", (data) => socket.broadcast.emit("typingResponse", data));
 
 ## alerts all currently connected users to this socket's connection. use to update online status dynamically 
 socket.broadcast.emit("userConnected", {
@@ -349,4 +353,24 @@ socket.broadcast.emit("userConnected", {
     username: socket.username,
 });
 
+## Emits errors to this, can console.log these so you can troubleshoot
+socket.emit("error", {});
+
+
+
+## List of Listeners for Front End
+
+connectionResponse  Listens for response from connectSocket
+
+onlineFriends   listening for array of currently online friends
+
+messageHistory  listening for message history for current chat
+
+messageResponse listening for message (incoming)
+
+userConnected   Listens for any other user joining the server.
+
+error   Listens for all errors
+
+userDisconnected    Listens for disconnection
 
