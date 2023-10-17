@@ -9,23 +9,29 @@ function initialiseSockets(server) {
         }
     });
 
-    //called on socket.connect()
-    io.use(async (socket, next) => {
-        socket.accountID = socket.handshake.auth.accountID;
-        socket.username = socket.handshake.auth.username;
-        next();
-    });
-
     //this remains active for every connection, all the time.
     io.on("connection", (socket) => {
-        console.log("Connection established. With username " + socket.username);
-        let currentChatID = null;
+        console.log("Connection established. Awaiting username.");
 
-        //alerts all currently connected users on this socket's connection
-        //use to update online status dynamically 
-        socket.broadcast.emit("userConnected", {
-            userID: socket.accountID,
-            username: socket.username,
+        socket.on("connectSocket", ({ accountID, username }) => {
+            
+            socket.accountID = accountID;
+            socket.username = username;
+            if (socket.accountID && socket.username) {
+                socket.emit("connectionResponse", {
+                    "response": "OK"
+                });
+                socket.broadcast.emit("userConnected", {
+                    userID: socket.accountID,
+                    username: socket.username,
+                });
+            }
+            else{
+                socket.emit("error", {
+                    "error": "Connection Fail"
+                });
+            }
+
         });
 
         socket.on("getOnlineFriends", () => {
@@ -36,61 +42,94 @@ function initialiseSockets(server) {
                 //add only valid friendships to the array
                 console.log(socket.accountID + " and " + globalSocket.accountID)
                 if (friendshipController.isActiveFriend(socket.accountID, globalSocket.accountID)) {
-                    friends.push({
-                        //what data does front end need here? just sending this for now
-                        accountID: globalSocket.accountID
-                    });
+                    if (globalSocket.accountID != socket.accountID) {
+                        friends.push({
+                            //what data does front end need here? just sending this for now
+                            accountID: globalSocket.accountID
+                        });
+                    }
                 }
             }
             socket.emit("onlineFriends", friends);
         })
 
 
-
+        //if chat already connected, just get history
         //connect with chatID (should have from friendships)
         socket.on("connectChat", ({ chatID }) => {
-            //if socket is currently in a chat, leave the chat
-            if (currentChatID) {
-                socket.leave(currentChatID);
-                currentChatID = null;
+            //join chat if not already joined
+            if (!socket.rooms.has(chatID)) {
+                console.log("socket not already in room, joining room");
+                socket.join(chatID);
             }
-            //join chat
-            currentChatID = chatID;
-            if (currentChatID) {
-                socket.join(currentChatID);
-                //grab message history for this chat
-                let messages = chatData.getMessageHistory(currentChatID, 10);
-                socket.emit("messageHistory", messages);
+            else{
+                socket.emit("error", {
+                    "error": "Failed to join room"
+                });
             }
-            else {
-                next(new Error("Error joining chat"));
+        });
+
+        socket.on("getMessages", ({chatID}) => {
+            if (socket.rooms.has(chatID)) {
+                console.log("socket in room, grabbing history");
+    
+                //grab top 10 message history for this chat
+                chatData.getMessageHistory(chatID, 10).then(messages => {
+                    console.log(messages);
+                    socket.emit("messageHistory", messages);
+                });
+
+            }
+            else{
+                socket.emit("error", {
+                    "error": "Fail - Socket is not connected to the chat specified."
+                });
             }
         });
         //request top X messages from database
-        socket.on("moreMessages", ({chatID, num}) => {
-            let messages = chatData.getMessageHistory(chatID, num);
-            socket.emit("messageHistory", messages);
+        socket.on("moreMessages", ({ chatID, num }) => {
+            if (socket.rooms.has(chatID)) {
+                console.log("socket in room, grabbing history");
+    
+                //grab top 10 message history for this chat
+                chatData.getMessageHistory(chatID, num).then(messages => {
+                    console.log(messages);
+                    socket.emit("messageHistory", messages);
+                });
+
+            }
+            else{
+                socket.emit("error", {
+                    "error": "Fail - Socket is not connected to the chat specified."
+                });
+            }
         });
 
-        socket.on("privateMessage", ({ message, timestamp }) => {
-            if (currentChatID) {
-                socket.to(currentChatID).emit("messageResponse", {
+        socket.on("sendMessage", ({ chatID, message }) => {
+            let timestamp = new Date();
+
+            if (socket.rooms.has(chatID)) {
+                socket.to(chatID).emit("messageResponse", {
                     message,
                     from: socket.username,
                     timestamp: timestamp,
                 });
-                chatData.saveMessage(message, socket.accountID, timestamp, currentChatID);
+                chatData.saveMessage(message, socket.accountID, timestamp, chatID);
             }
-            else {
-                next(new Error("No chat selected"));
+            else{
+                socket.emit("error", {
+                    "error": "Fail - Socket is not connected to the chat specified."
+                });
             }
         });
-
-        socket.on("typing", (data) => socket.broadcast.emit("typingResponse", data));
 
         socket.on('disconnect', () => {
-            console.log('A user disconnected');
+            socket.broadcast.emit("userDisconnected", {
+                userID: socket.accountID,
+                username: socket.username,
+            });
         });
+
     });
 
 }
