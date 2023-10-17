@@ -62,6 +62,26 @@ function formatDate(date){
     return format(date, 'dd/MM/yyyy HH:mm');
 }
 
+async function isValidChatID(chatID){
+    try{
+        await sql.connect(sqlConfig.returnServerConfig());
+        const query = `SELECT FriendshipID from Friendships WHERE FriendshipID = ${chatID}`;
+
+
+        const result = await sql.query(query);
+
+        if(result.rowsAffected > 0){
+            return true;
+        }
+        else{
+        // //return false if not found
+        return false;
+        }
+    //return false in an error occurs
+    } catch(err){
+        return false;
+    }
+}
 
 
 module.exports = {
@@ -69,4 +89,5 @@ module.exports = {
     getMessageHistory,
     saveMessage,
     formatDate,
+    isValidChatID,
 };

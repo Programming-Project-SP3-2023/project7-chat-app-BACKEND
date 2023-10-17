@@ -14,7 +14,7 @@ function initialiseSockets(server) {
         console.log("Connection established. Awaiting username.");
 
         socket.on("connectSocket", ({ accountID, username }) => {
-            
+
             socket.accountID = accountID;
             socket.username = username;
             if (socket.accountID && socket.username) {
@@ -26,7 +26,7 @@ function initialiseSockets(server) {
                     username: socket.username,
                 });
             }
-            else{
+            else {
                 socket.emit("error", {
                     "error": "Connection Fail"
                 });
@@ -59,20 +59,29 @@ function initialiseSockets(server) {
         socket.on("connectChat", ({ chatID }) => {
             //join chat if not already joined
             if (!socket.rooms.has(chatID)) {
-                console.log("socket not already in room, joining room");
-                socket.join(chatID);
+                chatData.isValidChatID(chatID).then((isValidID) => {
+                    if (isValidID) {
+                        console.log("socket not already in room, joining room");
+                        socket.join(chatID);
+                    }
+                    else {
+                        socket.emit("error", {
+                            "error": "ChatID not valid"
+                        });
+                    }
+                });
             }
-            else{
+            else {
                 socket.emit("error", {
                     "error": "Failed to join room"
                 });
             }
         });
 
-        socket.on("getMessages", ({chatID}) => {
+        socket.on("getMessages", ({ chatID }) => {
             if (socket.rooms.has(chatID)) {
                 console.log("socket in room, grabbing history");
-    
+
                 //grab top 10 message history for this chat
                 chatData.getMessageHistory(chatID, 10).then(messages => {
                     console.log(messages);
@@ -80,7 +89,7 @@ function initialiseSockets(server) {
                 });
 
             }
-            else{
+            else {
                 socket.emit("error", {
                     "error": "Fail - Socket is not connected to the chat specified."
                 });
@@ -90,7 +99,7 @@ function initialiseSockets(server) {
         socket.on("moreMessages", ({ chatID, num }) => {
             if (socket.rooms.has(chatID)) {
                 console.log("socket in room, grabbing history");
-    
+
                 //grab top 10 message history for this chat
                 chatData.getMessageHistory(chatID, num).then(messages => {
                     console.log(messages);
@@ -98,7 +107,7 @@ function initialiseSockets(server) {
                 });
 
             }
-            else{
+            else {
                 socket.emit("error", {
                     "error": "Fail - Socket is not connected to the chat specified."
                 });
@@ -116,7 +125,7 @@ function initialiseSockets(server) {
                 });
                 chatData.saveMessage(message, socket.accountID, timestamp, chatID);
             }
-            else{
+            else {
                 socket.emit("error", {
                     "error": "Fail - Socket is not connected to the chat specified."
                 });
