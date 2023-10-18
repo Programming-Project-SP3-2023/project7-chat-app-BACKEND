@@ -2,6 +2,8 @@ const express = require('express');
 const sql = require('mssql');
 const sqlConfig = require('../config');
 const { stringify } = require('querystring');
+const chatData = require('../middleware/chatData');
+
 
 //sends a friend request
 function sendRequest(requesterID, requesteeID, res){
@@ -12,8 +14,8 @@ function sendRequest(requesterID, requesteeID, res){
             //check DB for an existing friendship or friend request
             if(!existingFriendship){
                 //if there isn't an existing friend request, add friendship into the database as pending
-                result = await sql.query`INSERT INTO Friendships (RequesterID, AdresseeID, Status)
-                Values (${requesterID}, ${requesteeID}, 'Pending')`
+                result = await sql.query`INSERT INTO Friendships (FriendshipID, RequesterID, AddresseeID, Status)
+                Values (${chatData.generateChatID(requesterID, requesteeID)}, ${requesterID}, ${requesteeID}, 'Pending')`
 
                 return res.status(200).json({
                     Message: "OK"
@@ -45,7 +47,7 @@ async function acceptRequest(currentUserID, requesterID, res){
                 const result = await sql.query`UPDATE Friendships
                 SET Status = 'Active'
                 WHERE RequesterID = ${requesterID}
-                AND AdresseeID = ${currentUserID}`
+                AND AddresseeID = ${currentUserID}`
                 
                 return res.status(200).json({
                     Message: "OK"
@@ -78,7 +80,7 @@ async function deleteFriendship(currentUserID, otherUserID, res){
             sql.connect(sqlConfig.returnServerConfig()).then(async function(){
                 const result = await sql.query`DELETE FROM Friendships
                                             WHERE RequesterID = ${otherUserID}
-                                            AND AdresseeID = ${currentUserID}
+                                            AND AddresseeID = ${currentUserID}
                                             OR
                                             AddresseeID = ${otherUserID}
                                             AND RequesterID = ${currentUserID}`
@@ -140,7 +142,7 @@ function returnFriendsList(currentUserID, status, res){
 
                                            WHERE RequesterID = ${currentUserID}
                                            AND Status = ${status}
-                                           OR AdresseeID = ${currentUserID}
+                                           OR AddresseeID = ${currentUserID}
                                            AND Status = ${status}`
 
             const friendships = result.recordsets;
@@ -175,10 +177,10 @@ async function checkForExistingFriendships(currentUserID, otherUserID){
             //check DB for an existing friendrequest
         const query = `Select TOP 1 * FROM Friendships
                                            Where RequesterID = ${currentUserID}
-                                           AND AdresseeID = ${otherUserID}
+                                           AND AddresseeID = ${otherUserID}
                                            
                                            OR RequesterID = ${otherUserID} 
-                                           AND AdresseeID = ${currentUserID}`
+                                           AND AddresseeID = ${currentUserID}`
 
         const result = await sql.query(query);
 
@@ -196,12 +198,44 @@ async function checkForExistingFriendships(currentUserID, otherUserID){
     }
 
 }
+//checks if there is an !active! friendship between two accountIDs.
+async function isActiveFriend(ID1, ID2){
+    try{
+        await sql.connect(sqlConfig.returnServerConfig());
+            //check DB for an existing friendrequest
+        const query = `Select TOP 1 * FROM Friendships
+                                           Where RequesterID = ${ID1}
+                                           AND AddresseeID = ${ID2}
+                                           AND Status = 'Active'
+                                           
+                                           OR RequesterID = ${ID2} 
+                                           AND AddresseeID = ${ID1}
+                                           AND Status = 'Active'`
+
+
+        const result = await sql.query(query);
+
+        //if there is an existing friend request return true
+        if(result.recordset.length > 0){
+            Promise.resolve(true);
+        }
+    
+        // //return false if no friendship found
+        return Promise.resolve(false);
+
+    //return false in an error occurs
+    } catch(err){
+        console.dir(err);
+        return Promise.resolve(false);
+    }
+}
 
 module.exports = {
     sendRequest,
     acceptRequest,
     deleteFriendship,
     search,
-    returnFriendsList
+    returnFriendsList,
+    isActiveFriend
 }
 

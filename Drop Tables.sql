@@ -5,3 +5,5 @@ DROP TABLE Friendships
 DROP TABLE GroupMembers
 DROP TABLE Groups
 DROP TABLE Logins
+DROP TABLE Messages
+DROP TABLE Avatars
