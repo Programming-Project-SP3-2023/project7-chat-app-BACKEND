@@ -4,7 +4,7 @@ CREATE TABLE [dbo].[Accounts](
 	Email varchar(50) NOT NULL,
 	DisplayName varchar(50) NOT NULL,
 	Dob date NOT NULL,
-	Avatar varchar(max) NOT NULL,
+	Avatar varchar(max),
 	PRIMARY KEY (AccountID)
 )
 

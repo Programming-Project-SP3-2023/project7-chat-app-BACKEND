@@ -133,31 +133,58 @@ function search(DisplayName, res){
 }
 
 //return a list of users friends or friendrequests
-function returnFriendsList(currentUserID, status, res){
+async function returnFriendsList(currentUserID, status, res){
     try{
+
         //select all users from the friendships table that match the users AccountID
         //client side provides the requested status such as pending or accepted
         sql.connect(sqlConfig.returnServerConfig()).then(async function(){
-            const result = await sql.query`SELECT * FROM friendships
+            if(status == "Pending"){
+                //only received friend requests.
+                const result = await sql.query`SELECT Friendships.RequesterID, Accounts.DisplayName, Accounts.Email, Accounts.DoB, Accounts.Avatar
+                                             FROM Friendships
+                                             INNER JOIN Accounts ON Friendships.RequesterID = Accounts.AccountID
+                                             WHERE Friendships.AddresseeID = ${currentUserID} AND Friendships.Status = 'Pending'`
+                const friendships = result.recordsets[0];
+                //return the list of users
+                if(result.rowsAffected > 0){
+                    return res.status(200).json({
+                        Message: "OK",
+                        friendships
+                    });
+                }
 
-                                           WHERE RequesterID = ${currentUserID}
-                                           AND Status = ${status}
-                                           OR AddresseeID = ${currentUserID}
-                                           AND Status = ${status}`
 
-            const friendships = result.recordsets;
-            //return the list of users
-            if(result.rowsAffected > 0){
+            } else {
+                const friendships = []
+
+                var result = await sql.query
+                `SELECT Friendships.RequesterID, Accounts.DisplayName, Accounts.Email, Accounts.DoB, Accounts.Avatar
+                FROM Friendships
+                INNER JOIN Accounts ON Friendships.RequesterID = Accounts.AccountID
+                WHERE Friendships.AddresseeID = ${currentUserID} AND Friendships.Status = 'Pending'`
+                
+                for(i=0;i<result.rowsAffected;i++){
+                    friendships.push(result.recordsets[0][i])
+                }
+                
+                result = await sql.query
+                `SELECT Friendships.AddresseeID, Accounts.DisplayName, Accounts.Email, Accounts.DoB, Accounts.Avatar
+                FROM Friendships
+                INNER JOIN Accounts ON Friendships.AddresseeID = Accounts.AccountID
+                WHERE Friendships.RequesterID = ${currentUserID} AND Friendships.Status = 'Pending'`
+                
+                for(i=0;i<result.rowsAffected;i++){
+                    friendships.push(result.recordsets[0][i])
+                }
+
+                console.dir(friendships);
+
                 return res.status(200).json({
                     Message: "OK",
                     friendships
                 });
             }
-            
-            //if not friendships are found of specified Type, return 401.
-            return res.status(401).json({
-                Message: "No results found!"
-            });
         });
         
     //catch and print any errors

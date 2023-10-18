@@ -6,7 +6,7 @@ const sqlConfig = require('../config');
 // Upload an avatar
 const uploadAvatar = async (req, res) => {
     try {
-        console.log('Upload avatar route reached.'); // TODO - delete
+        console.dir('Upload avatar route reached.'); // TODO - delete
         // account id from req with token data
         const userId = req.user.AccountID;
 
@@ -18,7 +18,7 @@ const uploadAvatar = async (req, res) => {
         const existingAvatarResult = await pool
             .request()
             .input('userId', sql.Int, userId)
-            .query('SELECT AvatarData FROM Avatars WHERE AccountID = @userId');
+            .query('SELECT Avatar FROM Accounts WHERE AccountID = @userId');
 
         if (existingAvatarResult.recordset.length === 0) {
             // If no existing avatar, insert a new one
@@ -26,14 +26,14 @@ const uploadAvatar = async (req, res) => {
                 .request()
                 .input('userId', sql.Int, userId)
                 .input('avatarData', sql.NVarChar, avatarData)
-                .query('INSERT INTO Avatars (AccountID, AvatarData) VALUES (@userId, @avatarData)');
+                .query('UPDATE Accounts SET Avatar = avatarData WHERE AccountID = @userId');
         } else {
             // If there's an existing avatar, update it
             const updateResult = await pool
                 .request()
                 .input('userId', sql.Int, userId)
                 .input('avatarData', sql.NVarChar, avatarData)
-                .query('UPDATE Avatars SET AvatarData = @avatarData WHERE AccountID = @userId');
+                .query('UPDATE Accounts SET Avatar = @avatarData WHERE AccountID = @userId');
         }
 
         res.status(200).json({ message: 'Avatar uploaded successfully' });
@@ -51,14 +51,14 @@ const getAvatar = async (req, res) => {
         const result = await pool
             .request()
             .input('userId', sql.Int, userId)
-            .query('SELECT AvatarData FROM Avatars WHERE AccountID = @userId');
+            .query('SELECT Avatar FROM Accounts WHERE AccountID = @userId');
 
         if (result.recordset.length === 0) {
             return res.status(204).json({ message: 'Avatar not found' });
 
         }
 
-        res.status(200).json({ avatarData: result.recordset[0].AvatarData });
+        res.status(200).json({ avatarData: result.recordset[0].Avatar });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });

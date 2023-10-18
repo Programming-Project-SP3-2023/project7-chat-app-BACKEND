@@ -3,7 +3,7 @@ const env = require('dotenv').config();
 //authenticates token and puts user data inside it
 function authenticateToken(req, res, next) {
     const token = req.header('Authorization');
-
+    
     if (!token) {
         return res.status(401).json({ message: 'Unauthorized' });
     }
@@ -17,6 +17,8 @@ function authenticateToken(req, res, next) {
         req.user = user; 
         next();
     });
+
+
 }
 
 module.exports = authenticateToken;

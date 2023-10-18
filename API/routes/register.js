@@ -54,7 +54,7 @@ router.post('/', jsonParser, (req, res, next) =>{
         if(result.rowsAffected == 0){
             //insert new user into the database
             result = await sql.query`INSERT INTO Accounts (Email, DisplayName, Dob, Avatar) 
-            VALUES (${user.email}, ${user.name}, ${user.dateOfBirth}, ${user.name})`
+            VALUES (${user.email}, ${user.name}, ${user.dateOfBirth}, 'NULL')`
 
             //select the accountID of the new user
             const AccountID = await sql.query`SELECT TOP 1 * FROM Accounts ORDER BY AccountID DESC`
