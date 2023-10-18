@@ -40,7 +40,7 @@ router.post('/search', jsonparser, (req, res, next) => {
 });
 
 //return a list of users friends or friendrequests
-router.get('/friends', jsonparser, (req, res, next) => {
+router.post('/friends', jsonparser, (req, res, next) => {
     //check if token is valid (TODO)
 
     //send accountID to the controller, which returns a list of friendships in JSON

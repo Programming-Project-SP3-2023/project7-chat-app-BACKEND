@@ -126,7 +126,7 @@ ___
 <!-- Searching for friensds -->
 
 ### Searching for friends
-Searching for friends is called by sending a GET request to:
+Searching for friends is called by sending a POST request to:
     
     Https:/localhost:4000/friendships/search
 
@@ -150,7 +150,7 @@ ___
 <!-- friends List -->
 
 ### Getting a friends list / friend requests
-Getting a users friendlist is called by sending a GET request to:
+Getting a users friendlist is called by sending a POST request to:
     
     Https:/localhost:4000/friendships/friends
 
