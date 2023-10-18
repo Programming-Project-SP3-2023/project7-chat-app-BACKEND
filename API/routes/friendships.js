@@ -32,7 +32,7 @@ router.delete('/delete', jsonparser, (req, res, next) => {
 });
 
 //return users matching entered name
-router.get('/search', jsonparser, (req, res, next) => {
+router.post('/search', jsonparser, (req, res, next) => {
     //check if token is valid (TODO)
 
     //send search params to the controller, which returns a list in JSON
