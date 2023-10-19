@@ -21,10 +21,22 @@ function initialiseSockets(server) {
                 socket.emit("connectionResponse", {
                     "response": "OK"
                 });
-                socket.broadcast.emit("userConnected", {
-                    userID: socket.accountID,
-                    username: socket.username,
-                });
+                for (let [accountID, globalSocket] of io.of("/").sockets) {
+                    console.log(socket.accountID + " and " + globalSocket.accountID)
+                    if (globalSocket.accountID) {
+                        friendshipController.isActiveFriend(socket.accountID, globalSocket.accountID).then((isFriend) => {
+                            if (isFriend) {
+                                console.log(socket.accountID + " and " + globalSocket.accountID + " Are friends!")
+                                if (globalSocket.accountID != socket.accountID) {
+                                    socket.to(globalSocket.id).emit("userConnected", {
+                                        userID: socket.accountID,
+                                        username: socket.username,
+                                    });
+                                }
+                            }
+                        });
+                    }
+                }
             }
             else {
                 socket.emit("error", {
@@ -41,13 +53,18 @@ function initialiseSockets(server) {
             for (let [accountID, globalSocket] of io.of("/").sockets) {
                 //add only valid friendships to the array
                 console.log(socket.accountID + " and " + globalSocket.accountID)
-                if (friendshipController.isActiveFriend(socket.accountID, globalSocket.accountID)) {
-                    if (globalSocket.accountID != socket.accountID) {
-                        friends.push({
-                            //what data does front end need here? just sending this for now
-                            accountID: globalSocket.accountID
-                        });
-                    }
+                if (globalSocket.accountID) {
+                    friendshipController.isActiveFriend(socket.accountID, globalSocket.accountID).then((isFriend) => {
+                        if (isFriend) {
+                            if (globalSocket.accountID != socket.accountID) {
+                                friends.push({
+                                    //what data does front end need here? just sending this for now
+                                    accountID: globalSocket.accountID
+                                });
+                            }
+                        }
+                    });
+
                 }
             }
             socket.emit("onlineFriends", friends);
@@ -133,10 +150,22 @@ function initialiseSockets(server) {
         });
 
         socket.on('disconnect', () => {
-            socket.broadcast.emit("userDisconnected", {
-                userID: socket.accountID,
-                username: socket.username,
-            });
+            for (let [accountID, globalSocket] of io.of("/").sockets) {
+                console.log(socket.accountID + " and " + globalSocket.accountID)
+                if (globalSocket.accountID) {
+                    friendshipController.isActiveFriend(socket.accountID, globalSocket.accountID).then((isFriend) => {
+                        if (isFriend) {
+                            if (globalSocket.accountID != socket.accountID) {
+                                socket.to(globalSocket.id).emit("userDisconnected", {
+                                    userID: socket.accountID,
+                                    username: socket.username,
+                                });
+                            }
+                        }
+                    });
+
+                }
+            }
         });
 
     });

@@ -227,6 +227,7 @@ async function checkForExistingFriendships(currentUserID, otherUserID){
 }
 //checks if there is an !active! friendship between two accountIDs.
 async function isActiveFriend(ID1, ID2){
+    return new Promise(async (resolve, reject) => {
     try{
         await sql.connect(sqlConfig.returnServerConfig());
             //check DB for an existing friendrequest
@@ -241,20 +242,21 @@ async function isActiveFriend(ID1, ID2){
 
 
         const result = await sql.query(query);
-
+        console.log(result);
         //if there is an existing friend request return true
-        if(result.recordset.length > 0){
-            Promise.resolve(true);
-        }
-    
-        // //return false if no friendship found
-        return Promise.resolve(false);
+        if(result.rowsAffected > 0){
 
+            resolve(true);
+        }
+        else{
+        resolve(false);
+        }
     //return false in an error occurs
     } catch(err){
         console.dir(err);
-        return Promise.resolve(false);
+        reject(err);
     }
+});
 }
 
 module.exports = {
