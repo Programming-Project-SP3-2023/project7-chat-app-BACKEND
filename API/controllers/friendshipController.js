@@ -118,9 +118,10 @@ function search(DisplayName, res){
                     userList
                 });
             }
-            //return 401, if no results found
-            return res.status(401).json({
-                Message: "No results found!"
+            //return 204, if no results found
+            return res.status(204).json({
+                Message: "No results found!",
+                userList: []
             });
 
         });
