@@ -140,25 +140,24 @@ async function returnFriendsList(currentUserID, status, res){
         //select all users from the friendships table that match the users AccountID
         //client side provides the requested status such as pending or accepted
         sql.connect(sqlConfig.returnServerConfig()).then(async function(){
-            if(status == "Pending"){
+            const friendships = []
+            if(status === "Pending"){
                 //only received friend requests.
                 const result = await sql.query`SELECT Friendships.RequesterID, Accounts.DisplayName, Accounts.Email, Accounts.DoB, Accounts.Avatar
                                              FROM Friendships
                                              INNER JOIN Accounts ON Friendships.RequesterID = Accounts.AccountID
                                              WHERE Friendships.AddresseeID = ${currentUserID} AND Friendships.Status = 'Pending'`
-                const friendships = result.recordsets[0];
+                for(i=0;i<result.rowsAffected;i++){
+                    friendships.push(result.recordsets[0][i])
+                }
                 //return the list of users
-                if(result.rowsAffected > 0){
                     return res.status(200).json({
                         Message: "OK",
                         friendships
                     });
-                }
 
 
             } else {
-                const friendships = []
-
                 var result = await sql.query
                 `SELECT Friendships.RequesterID, Accounts.DisplayName, Accounts.Email, Accounts.DoB, Accounts.Avatar
                 FROM Friendships
