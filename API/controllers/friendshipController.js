@@ -150,12 +150,10 @@ async function returnFriendsList(currentUserID, status, res){
                     friendships.push(result.recordsets[0][i])
                 }
                 //return the list of users
-                    return res.status(200).json({
-                        Message: "OK",
-                        friendships
-                    });
-
-
+                return res.status(200).json({
+                    Message: "OK",
+                    friendships
+                });
             } else {
                 var result = await sql.query
                 `SELECT Friendships.RequesterID, Accounts.DisplayName, Accounts.Email, Accounts.DoB, Accounts.Avatar
