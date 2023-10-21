@@ -136,7 +136,7 @@ function search(DisplayName, res){
 //return a list of users friends or friendrequests
 async function returnFriendsList(currentUserID, status, res){
     try{
-
+        console.dir(status);
         //select all users from the friendships table that match the users AccountID
         //client side provides the requested status such as pending or accepted
         sql.connect(sqlConfig.returnServerConfig()).then(async function(){
@@ -160,7 +160,7 @@ async function returnFriendsList(currentUserID, status, res){
                 `SELECT Friendships.RequesterID, Accounts.DisplayName, Accounts.Email, Accounts.DoB, Accounts.Avatar
                 FROM Friendships
                 INNER JOIN Accounts ON Friendships.RequesterID = Accounts.AccountID
-                WHERE Friendships.AddresseeID = ${currentUserID} AND Friendships.Status = 'Pending'`
+                WHERE Friendships.AddresseeID = ${currentUserID} AND Friendships.Status = 'Active'`
                 
                 for(i=0;i<result.rowsAffected;i++){
                     friendships.push(result.recordsets[0][i])
@@ -170,7 +170,7 @@ async function returnFriendsList(currentUserID, status, res){
                 `SELECT Friendships.AddresseeID, Accounts.DisplayName, Accounts.Email, Accounts.DoB, Accounts.Avatar
                 FROM Friendships
                 INNER JOIN Accounts ON Friendships.AddresseeID = Accounts.AccountID
-                WHERE Friendships.RequesterID = ${currentUserID} AND Friendships.Status = 'Pending'`
+                WHERE Friendships.RequesterID = ${currentUserID} AND Friendships.Status = 'Active'`
                 
                 for(i=0;i<result.rowsAffected;i++){
                     friendships.push(result.recordsets[0][i])
