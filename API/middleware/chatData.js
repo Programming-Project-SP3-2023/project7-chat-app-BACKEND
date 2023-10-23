@@ -64,19 +64,21 @@ function formatDate(date){
 
 async function isValidChatID(chatID){
     try{
-        await sql.connect(sqlConfig.returnServerConfig());
-        const query = `SELECT FriendshipID from Friendships WHERE FriendshipID = ${chatID}`;
+        sql.connect(sqlConfig.returnServerConfig()).then(async function (){
+            const query = `SELECT FriendshipID from Friendships WHERE FriendshipID = ${chatID}`;
 
 
-        const result = await sql.query(query);
-
-        if(result.rowsAffected > 0){
-            return true;
-        }
-        else{
-        // //return false if not found
-        return false;
-        }
+            const result = await sql.query(query);
+    
+            if(result.rowsAffected > 0){
+                return Promise.resolve(true);
+            }
+            else{
+            // //return false if not found
+            return Promise.resolve(false);
+            }
+        });
+        
     //return false in an error occurs
     } catch(err){
         return false;

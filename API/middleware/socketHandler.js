@@ -21,6 +21,7 @@ function initialiseSockets(server) {
                 socket.emit("connectionResponse", {
                     "response": "OK"
                 });
+                console.log("Connected with "+socket.accountID +" " +socket.username);
                 for (let [accountID, globalSocket] of io.of("/").sockets) {
                     console.log(socket.accountID + " and " + globalSocket.accountID)
                     if (globalSocket.accountID) {
