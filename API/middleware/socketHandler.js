@@ -135,7 +135,7 @@ function initialiseSockets(server) {
         });
 
         socket.on("sendMessage", ({ chatID, message }) => {
-            let timestamp = new Date(Date.UTC());
+            let timestamp = new Date.UTC();
 
             if (socket.rooms.has(chatID)) {
                 socket.to(chatID).emit("messageResponse", {
