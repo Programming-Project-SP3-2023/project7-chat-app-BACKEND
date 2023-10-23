@@ -89,11 +89,10 @@ function initialiseSockets(server) {
                         "error": "ChatID not valid"
                     });
                 }
-
             }
-            else {
-                socket.emit("error", {
-                    "error": "Failed to join room"
+            if (socket.rooms.has(chatID)) {
+                socket.emit("connectChatResponse", {
+                    "response": "OK"
                 });
             }
         });
@@ -136,7 +135,7 @@ function initialiseSockets(server) {
         });
 
         socket.on("sendMessage", ({ chatID, message }) => {
-            let timestamp = new Date();
+            let timestamp = new Date(Date.UTC());
 
             if (socket.rooms.has(chatID)) {
                 socket.to(chatID).emit("messageResponse", {
