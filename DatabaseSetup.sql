@@ -75,6 +75,6 @@ CREATE TABLE [dbo].[Messages](
 	ChatID int NOT NULL,
 	MessageBody varchar(50),
 	SenderID int NOT NULL,
-	TimeSent datetime NOT NULL,
+	TimeSent bigint NOT NULL,
 	FOREIGN KEY (ChatID) REFERENCES Friendships(FriendshipID)
 )

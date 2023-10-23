@@ -135,13 +135,13 @@ function initialiseSockets(server) {
         });
 
         socket.on("sendMessage", ({ chatID, message }) => {
-            let timestamp = new Date.UTC();
+            let timestamp = new Date().getTime();
 
             if (socket.rooms.has(chatID)) {
                 socket.to(chatID).emit("messageResponse", {
                     message,
                     from: socket.username,
-                    timestamp: chatData.formatDate(timestamp),
+                    timestamp: timestamp,
                 });
                 chatData.saveMessage(message, socket.accountID, timestamp, chatID);
             }
