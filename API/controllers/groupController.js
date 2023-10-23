@@ -8,7 +8,7 @@ const router = express.Router();
 
 
 
-const deleteGroup = async (req, res => {
+const deleteGroup = async (req, res) => {
     try{
         const groupId = req.params.groupId;
         const userAccountId = req.user.AccountID;
@@ -49,16 +49,19 @@ const deleteGroup = async (req, res => {
     }
     };
 //create a new group
-//IDK why i made this a route here, will delete
-Router.post('', authenticateToken, async (req, res)=>{
-    try{
-        //get group details from body
-        const{groupName} = req.body;
-        if(!groupName){
-            return res.status(400).json({message: 'Group name is required'})
+
+const createGroup = async (req, res) => {
+    try {
+        // Get group details from the request body
+        const { groupName } = req.body;
+        if (!groupName) {
+            return res.status(400).json({ message: 'Group name is required' });
         }
-        //db connect
-        const creatorId = req.user.AccountID;
+
+        // Get the creator's AccountID from the authenticated token
+        const creatorAccountId = req.user.AccountID;
+
+        // Create a new database connection pool
         const pool = await sql.connect(sqlConfig);
 
         // Insert a new group into the Groups table
@@ -82,7 +85,5 @@ Router.post('', authenticateToken, async (req, res)=>{
         console.error(error);
         return res.status(500).json({ message: 'Server error' });
     }
-});
-
-
+};
     module.exports = router;
