@@ -63,7 +63,6 @@ function formatDate(date) {
 }
 
 async function isValidChatID(chatID) {
-    return new Promise(async (resolve, reject) => {
 
         try {
             console.log("checking chat ID is valid now with chatid " + chatID);
@@ -76,23 +75,22 @@ async function isValidChatID(chatID) {
 
                 if (result.rowsAffected > 0) {
                     console.log("ChatID in db")
-                    return Promise.resolve(true);
+                    return true;
                 }
                 else {
                     // //return false if not found
-                    return Promise.resolve(false);
+                    return false;
                 }
             });
         }
         else{
-            return Promise.resolve(false);
+            return false;
         }
 
             //return false in an error occurs
         } catch (err) {
-            return Promise.resolve(false);
+            return false;
         }
-    });
 }
 
 
