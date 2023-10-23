@@ -67,6 +67,7 @@ async function isValidChatID(chatID) {
 
         try {
             console.log("checking chat ID is valid now with chatid " + chatID);
+            if(chatID){
             sql.connect(sqlConfig.returnServerConfig()).then(async function () {
                 const query = `SELECT FriendshipID from Friendships WHERE FriendshipID = ${chatID}`;
 
@@ -82,6 +83,10 @@ async function isValidChatID(chatID) {
                     return Promise.resolve(false);
                 }
             });
+        }
+        else{
+            return Promise.resolve(false);
+        }
 
             //return false in an error occurs
         } catch (err) {
