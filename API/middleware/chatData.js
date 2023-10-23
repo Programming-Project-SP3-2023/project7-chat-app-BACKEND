@@ -58,29 +58,39 @@ async function saveMessage(message, accountID, timestamp, currentChatID) {
     }
 }
 
-function formatDate(date){
+function formatDate(date) {
     return format(date, 'dd/MM/yyyy HH:mm');
 }
 
-async function isValidChatID(chatID){
-    try{
-        await sql.connect(sqlConfig.returnServerConfig());
-        const query = `SELECT FriendshipID from Friendships WHERE FriendshipID = ${chatID}`;
+async function isValidChatID(chatID) {
+
+        try {
+            console.log("checking chat ID is valid now with chatid " + chatID);
+            if(chatID){
+            sql.connect(sqlConfig.returnServerConfig()).then(async function () {
+                const query = `SELECT FriendshipID from Friendships WHERE FriendshipID = ${chatID}`;
 
 
-        const result = await sql.query(query);
+                const result = await sql.query(query);
 
-        if(result.rowsAffected > 0){
-            return true;
+                if (result.rowsAffected > 0) {
+                    console.log("ChatID in db")
+                    return true;
+                }
+                else {
+                    // //return false if not found
+                    return false;
+                }
+            });
         }
         else{
-        // //return false if not found
-        return false;
+            return false;
         }
-    //return false in an error occurs
-    } catch(err){
-        return false;
-    }
+
+            //return false in an error occurs
+        } catch (err) {
+            return false;
+        }
 }
 
 

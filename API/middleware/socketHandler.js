@@ -21,6 +21,7 @@ function initialiseSockets(server) {
                 socket.emit("connectionResponse", {
                     "response": "OK"
                 });
+                console.log("Connected with " + socket.accountID + " " + socket.username);
                 for (let [accountID, globalSocket] of io.of("/").sockets) {
                     console.log(socket.accountID + " and " + globalSocket.accountID)
                     if (globalSocket.accountID) {
@@ -75,18 +76,20 @@ function initialiseSockets(server) {
         //connect with chatID (should have from friendships)
         socket.on("connectChat", ({ chatID }) => {
             //join chat if not already joined
+            console.log("checking chatid" + chatID);
             if (!socket.rooms.has(chatID)) {
-                chatData.isValidChatID(chatID).then((isValidID) => {
-                    if (isValidID) {
-                        console.log("socket not already in room, joining room");
-                        socket.join(chatID);
-                    }
-                    else {
-                        socket.emit("error", {
-                            "error": "ChatID not valid"
-                        });
-                    }
-                });
+                isValidID = chatData.isValidChatID(chatID)
+                console.log("we're in the isvalid method now vaid is " + isValidID)
+                if (isValidID) {
+                    console.log("socket not already in room, joining room");
+                    socket.join(chatID);
+                }
+                else {
+                    socket.emit("error", {
+                        "error": "ChatID not valid"
+                    });
+                }
+
             }
             else {
                 socket.emit("error", {
@@ -96,6 +99,7 @@ function initialiseSockets(server) {
         });
 
         socket.on("getMessages", ({ chatID }) => {
+            console.log("checking messages for " + chatID)
             if (socket.rooms.has(chatID)) {
                 console.log("socket in room, grabbing history");
 
