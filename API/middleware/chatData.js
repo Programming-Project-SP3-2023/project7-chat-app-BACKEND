@@ -65,9 +65,8 @@ function formatDate(date) {
 async function isValidChatID(chatID) {
     return new Promise(async (resolve, reject) => {
 
-
         try {
-            console.log("checking chat ID is valid now")
+            console.log("checking chat ID is valid now with chatid " + chatID);
             sql.connect(sqlConfig.returnServerConfig()).then(async function () {
                 const query = `SELECT FriendshipID from Friendships WHERE FriendshipID = ${chatID}`;
 
@@ -75,6 +74,7 @@ async function isValidChatID(chatID) {
                 const result = await sql.query(query);
 
                 if (result.rowsAffected > 0) {
+                    console.log("ChatID in db")
                     return Promise.resolve(true);
                 }
                 else {
