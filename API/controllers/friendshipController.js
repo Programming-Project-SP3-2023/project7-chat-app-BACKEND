@@ -143,7 +143,7 @@ async function returnFriendsList(currentUserID, status, res){
             const friendships = []
             if(status === "Pending"){
                 //only received friend requests.
-                const result = await sql.query`SELECT Friendships.RequesterID, Accounts.DisplayName, Accounts.Email, Accounts.DoB, Accounts.Avatar
+                const result = await sql.query`SELECT *
                                              FROM Friendships
                                              INNER JOIN Accounts ON Friendships.RequesterID = Accounts.AccountID
                                              WHERE Friendships.AddresseeID = ${currentUserID} AND Friendships.Status = 'Pending'`
@@ -157,7 +157,7 @@ async function returnFriendsList(currentUserID, status, res){
                 });
             } else {
                 var result = await sql.query
-                `SELECT Friendships.RequesterID, Accounts.DisplayName, Accounts.Email, Accounts.DoB, Accounts.Avatar
+                `SELECT *
                 FROM Friendships
                 INNER JOIN Accounts ON Friendships.RequesterID = Accounts.AccountID
                 WHERE Friendships.AddresseeID = ${currentUserID} AND Friendships.Status = 'Active'`
@@ -167,7 +167,7 @@ async function returnFriendsList(currentUserID, status, res){
                 }
                 
                 result = await sql.query
-                `SELECT Friendships.AddresseeID, Accounts.DisplayName, Accounts.Email, Accounts.DoB, Accounts.Avatar
+                `SELECT *
                 FROM Friendships
                 INNER JOIN Accounts ON Friendships.AddresseeID = Accounts.AccountID
                 WHERE Friendships.RequesterID = ${currentUserID} AND Friendships.Status = 'Active'`
