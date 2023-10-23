@@ -28,21 +28,21 @@ CREATE TABLE [dbo].[Friendships](
 
 /****** Groups ******/
 CREATE TABLE [dbo].[Groups](
-	GroupID int NOT NULL PRIMARY KEY,
-	GroupName varchar(50) NOT NULL,
-)
+    GroupID int NOT NULL PRIMARY KEY,
+    GroupName varchar(50) NOT NULL
+);
 
 /****** GroupMembers ******/
 CREATE TABLE [dbo].[GroupMembers](
-	MemberID int NOT NULL,
-	AccountID int NOT NULL,
-	GroupID int NOT NULL,
-	Role varchar(50) NOT NULL,
-	Status varchar(50) NOT NULL,
-	FOREIGN KEY (AccountID) REFERENCES Accounts(AccountID),
-	FOREIGN KEY (GroupID) REFERENCES Groups(GroupID),
-	CONSTRAINT PK_GroupMembers PRIMARY KEY (MemberID)
-)
+    MemberID int NOT NULL,
+    AccountID int NOT NULL,
+    GroupID int NOT NULL,
+    Role varchar(50) NOT NULL,
+    FOREIGN KEY (AccountID) REFERENCES Accounts(AccountID),
+    FOREIGN KEY (GroupID) REFERENCES Groups(GroupID),
+    CONSTRAINT PK_GroupMembers PRIMARY KEY (MemberID)
+);
+
 
 /****** Channels ******/
 CREATE TABLE [dbo].[Channels](
