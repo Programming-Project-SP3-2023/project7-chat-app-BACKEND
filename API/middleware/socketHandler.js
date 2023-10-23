@@ -5,7 +5,7 @@ const friendshipController = require('../controllers/friendshipController')
 function initialiseSockets(server) {
     const io = ioSvr(server, {
         cors: { //cross orgin scripting
-            origin: ("https://main.d11izrd17dq8t7.amplifyapp.com/"), //origin set to whatever front end URL is - this is **mandatory**
+            origin: ("https://main.d11izrd17dq8t7.amplifyapp.com"), //origin set to whatever front end URL is - this is **mandatory**
         }
     });
 
