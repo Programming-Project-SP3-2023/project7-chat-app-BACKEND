@@ -8,6 +8,42 @@ const router = express.Router();
 
 
 
+
+//Add a user to a group
+const addMember = async(req, res) =>{
+    try{
+
+    }catch(error){
+        console.error(error);
+        return res.status(500).json({message: 'Internal Server Error'});
+    }
+};
+
+const removeMember = async(req, res)=>{
+    try{
+
+    }catch(error){
+        console.error(error);
+        return res.status(500).json({message: 'Internal Server Error'});
+    }
+};
+
+const getMembers = async(req, res)=>{
+    try{
+
+    }catch(error){
+        console.error(error);
+        return res.status(500).json({message: 'Internal Server Error'});
+    }
+};
+const groupInfo = async(req, res)=>{
+    try{
+
+    }catch(error){
+        console.error(error);
+        return res.status(500).json({message: 'Internal Server Error'});
+    }
+};
 const deleteGroup = async (req, res) => {
     try{
         const groupId = req.params.groupId;
@@ -86,4 +122,6 @@ const createGroup = async (req, res) => {
         return res.status(500).json({ message: 'Server error' });
     }
 };
-    module.exports = router;
+    module.exports = {deleteGroup, createGroup,
+
+    };
