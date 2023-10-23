@@ -97,6 +97,7 @@ function initialiseSockets(server) {
         });
 
         socket.on("getMessages", ({ chatID }) => {
+            console.log("checking messages for " +chatID)
             if (socket.rooms.has(chatID)) {
                 console.log("socket in room, grabbing history");
 
