@@ -47,26 +47,35 @@ function initialiseSockets(server) {
 
         });
 
-        socket.on("getOnlineFriends", () => {
+        socket.on("getOnlineFriends", async () => {
             //this notifies the socket of all friends currently online
             const friends = [];
+            const friendshipPromises = [];
             //grab all connections as globalsocket
             for (let [accountID, globalSocket] of io.of("/").sockets) {
                 //add only valid friendships to the array
                 console.log(socket.accountID + " and " + globalSocket.accountID)
                 if (globalSocket.accountID) {
-                    friendshipController.isActiveFriend(socket.accountID, globalSocket.accountID).then((isFriend) => {
+                    console.log("Checking friends for getonline friends");
+                    const friendshipPromise = friendshipController.isActiveFriend(socket.accountID, globalSocket.accountID).then((isFriend) => {
+                        console.log(isFriend);
                         if (isFriend) {
+                            console.log("was true, running")
                             if (globalSocket.accountID != socket.accountID) {
-                                friends.push({
-                                    //what data does front end need here? just sending this for now
-                                    accountID: globalSocket.accountID
-                                });
+                                console.log("socket not me, running")
+
+                                friends.push(globalSocket.accountID);
+                                
                             }
                         }
                     });
-
+                    friendshipPromises.push(friendshipPromise);
                 }
+            }
+            await Promise.all(friendshipPromises);
+            console.log("emitting friends: ");
+            for(i=0; i<friends.length; i++){
+                console.log(friends[i]);
             }
             socket.emit("onlineFriends", friends);
         })

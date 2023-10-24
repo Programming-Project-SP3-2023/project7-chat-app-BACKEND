@@ -245,9 +245,11 @@ async function isActiveFriend(ID1, ID2){
         if(result.rowsAffected > 0){
 
             resolve(true);
+            return;
         }
         else{
         resolve(false);
+        return;
         }
     //return false in an error occurs
     } catch(err){
