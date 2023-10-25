@@ -9,10 +9,41 @@ const router = express.Router();
 
 
 
-//Add a user to a group
+//Add a user to a group via email
 const addMember = async(req, res) =>{
     try{
+        const {email, groupId} = req.body;
 
+        //db connect
+        const pool = await sql.connect(sqlConfig);
+
+        //get acctID of user with specified email
+        const getUserQuery = `
+        SELECT AccountID
+        FROM Accounts
+        WHERE Email = @email
+        `;
+        const userResult = await pool
+        .request()
+        .input('email', sql.VarChar(50), email)
+        .query(getUserQuery);
+        if(userResult.recordset.length === 0){
+            return res.status(404).json({message: 'User not found'});
+        }
+        const accountId = userResult.recordset[0].AccountID;
+
+        //add user to group
+        const addMemberQuery = `
+        INSERT INTO GroupMembers (AccountID, GroupID, Role, Status)
+        VALUES (@accountId, @groupId, 'Member', 'Active')
+        `;
+        await pool
+        .request()
+        .input('accountId', sql.Int, accountId)
+        .input('groupId', sql.Int, groupId)
+        .query(addMemberQuery);
+        return res.status(200).json({message: 'User added to group successfully'});
+    
     }catch(error){
         console.error(error);
         return res.status(500).json({message: 'Internal Server Error'});
@@ -28,14 +59,8 @@ const removeMember = async(req, res)=>{
     }
 };
 
-const getMembers = async(req, res)=>{
-    try{
 
-    }catch(error){
-        console.error(error);
-        return res.status(500).json({message: 'Internal Server Error'});
-    }
-};
+//Returns all group info including a members list
 const groupInfo = async(req, res)=>{
     try{
 
