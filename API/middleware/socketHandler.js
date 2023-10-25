@@ -2,10 +2,10 @@ const ioSvr = require("socket.io");
 const chatData = require('./chatData');
 const friendshipController = require('../controllers/friendshipController')
 
-function initialiseSockets(server) {
+function initialiseSockets(server, frontEndpoint) {
     const io = ioSvr(server, {
         cors: { //cross orgin scripting
-            origin: ("https://main.d11izrd17dq8t7.amplifyapp.com"), //origin set to whatever front end URL is - this is **mandatory**
+            origin: (frontEndpoint), //origin set to whatever front end URL is - this is **mandatory**
         }
     });
 
@@ -87,7 +87,7 @@ function initialiseSockets(server) {
             //join chat if not already joined
             console.log("checking chatid" + chatID);
             if (!socket.rooms.has(chatID)) {
-                isValidID = chatData.isValidChatID(chatID)
+                isValidID = chatData.isValidChatID(chatID, socket.accountID)
                 console.log("we're in the isvalid method now vaid is " + isValidID)
                 if (isValidID) {
                     console.log("socket not already in room, joining room");
@@ -101,6 +101,27 @@ function initialiseSockets(server) {
             }
             if (socket.rooms.has(chatID)) {
                 socket.emit("connectChatResponse", {
+                    "response": "OK"
+                });
+            }
+        });
+
+        socket.on("connectChannel", ({channelID, accountID}) => {
+            if (!socket.rooms.has(channelID)) {
+                isValidID = chatData.isValidChannelID(channelID, accountID)
+                console.log("we're in the isvalid method now vaid is " + isValidID)
+                if (isValidID) {
+                    console.log("socket not already in group room, joining room");
+                    socket.join(channelID);
+                }
+                else {
+                    socket.emit("error", {
+                        "error": "ChannelID not valid"
+                    });
+                }
+            }
+            if (socket.rooms.has(channelID)) {
+                socket.emit("connectChannelResponse", {
                     "response": "OK"
                 });
             }

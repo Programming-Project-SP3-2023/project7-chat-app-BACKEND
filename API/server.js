@@ -1,5 +1,5 @@
 //HTTPS
-// /*
+ /*
 const https = require('https');
 const fs = require('fs');
 const https_options = {
@@ -11,22 +11,24 @@ const app = require('./app');
 const config = require('./config');
 const hostname = 'echo.matthewrosin.com';
 const port = 4000;
+const frontEndpoint = "https://main.d11izrd17dq8t7.amplifyapp.com";
 
 const server = https.createServer(https_options, app);
-// */
+ */
 //HTTP
- /*
+// /*
 const http = require('http');
 const fs = require('fs');
 const app = require('./app');
 const config = require('./config');
 const port = 4000;
+const frontEndpoint = "http://localhost:3000";
 
 const server = http.createServer(app);
- */
+// */
 const socketHandler = require('./middleware/socketHandler');
 
-socketHandler.initialiseSockets(server);
+socketHandler.initialiseSockets(server, frontEndpoint);
 
 
 
