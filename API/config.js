@@ -1,4 +1,4 @@
-const env = require('dotenv').config();
+const env = require('dotenv').config({ path: require('find-config')('.env') });
 
 function returnServerConfig(){
     const sqlConfig = {

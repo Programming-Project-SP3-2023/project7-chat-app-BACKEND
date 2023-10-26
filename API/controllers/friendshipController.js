@@ -2,6 +2,8 @@ const express = require('express');
 const sql = require('mssql');
 const sqlConfig = require('../config');
 const { stringify } = require('querystring');
+const chatData = require('../middleware/chatData');
+
 
 //sends a friend request
 function sendRequest(requesterID, requesteeID, res){
@@ -12,8 +14,8 @@ function sendRequest(requesterID, requesteeID, res){
             //check DB for an existing friendship or friend request
             if(!existingFriendship){
                 //if there isn't an existing friend request, add friendship into the database as pending
-                result = await sql.query`INSERT INTO Friendships (RequesterID, AddresseeID, Status)
-                Values (${requesterID}, ${requesteeID}, 'Pending')`
+                result = await sql.query`INSERT INTO Friendships (FriendshipID, RequesterID, AddresseeID, Status)
+                Values (${chatData.generateChatID(requesterID, requesteeID)}, ${requesterID}, ${requesteeID}, 'Pending')`
 
                 return res.status(200).json({
                     Message: "OK"
@@ -116,9 +118,10 @@ function search(DisplayName, res){
                     userList
                 });
             }
-            //return 401, if no results found
-            return res.status(401).json({
-                Message: "No results found!"
+            //return 204, if no results found
+            return res.status(204).json({
+                Message: "No results found!",
+                userList: []
             });
 
         });
@@ -131,31 +134,55 @@ function search(DisplayName, res){
 }
 
 //return a list of users friends or friendrequests
-function returnFriendsList(currentUserID, status, res){
+async function returnFriendsList(currentUserID, status, res){
     try{
+        console.dir(status);
         //select all users from the friendships table that match the users AccountID
         //client side provides the requested status such as pending or accepted
         sql.connect(sqlConfig.returnServerConfig()).then(async function(){
-            const result = await sql.query`SELECT * FROM friendships
+            const friendships = []
+            if(status === "Pending"){
+                //only received friend requests.
+                const result = await sql.query`SELECT *
+                                             FROM Friendships
+                                             INNER JOIN Accounts ON Friendships.RequesterID = Accounts.AccountID
+                                             WHERE Friendships.AddresseeID = ${currentUserID} AND Friendships.Status = 'Pending'`
+                for(i=0;i<result.rowsAffected;i++){
+                    friendships.push(result.recordsets[0][i])
+                }
+                //return the list of users
+                return res.status(200).json({
+                    Message: "OK",
+                    friendships
+                });
+            } else {
+                var result = await sql.query
+                `SELECT *
+                FROM Friendships
+                INNER JOIN Accounts ON Friendships.RequesterID = Accounts.AccountID
+                WHERE Friendships.AddresseeID = ${currentUserID} AND Friendships.Status = 'Active'`
+                
+                for(i=0;i<result.rowsAffected;i++){
+                    friendships.push(result.recordsets[0][i])
+                }
+                
+                result = await sql.query
+                `SELECT *
+                FROM Friendships
+                INNER JOIN Accounts ON Friendships.AddresseeID = Accounts.AccountID
+                WHERE Friendships.RequesterID = ${currentUserID} AND Friendships.Status = 'Active'`
+                
+                for(i=0;i<result.rowsAffected;i++){
+                    friendships.push(result.recordsets[0][i])
+                }
 
-                                           WHERE RequesterID = ${currentUserID}
-                                           AND Status = ${status}
-                                           OR AddresseeID = ${currentUserID}
-                                           AND Status = ${status}`
+                console.dir(friendships);
 
-            const friendships = result.recordsets;
-            //return the list of users
-            if(result.rowsAffected > 0){
                 return res.status(200).json({
                     Message: "OK",
                     friendships
                 });
             }
-            
-            //if not friendships are found of specified Type, return 401.
-            return res.status(401).json({
-                Message: "No results found!"
-            });
         });
         
     //catch and print any errors
@@ -196,12 +223,48 @@ async function checkForExistingFriendships(currentUserID, otherUserID){
     }
 
 }
+//checks if there is an !active! friendship between two accountIDs.
+async function isActiveFriend(ID1, ID2){
+    return new Promise(async (resolve, reject) => {
+    try{
+        await sql.connect(sqlConfig.returnServerConfig());
+            //check DB for an existing friendrequest
+        const query = `Select TOP 1 * FROM Friendships
+                                           Where RequesterID = ${ID1}
+                                           AND AddresseeID = ${ID2}
+                                           AND Status = 'Active'
+                                           
+                                           OR RequesterID = ${ID2} 
+                                           AND AddresseeID = ${ID1}
+                                           AND Status = 'Active'`
+
+
+        const result = await sql.query(query);
+        console.log(result);
+        //if there is an existing friend request return true
+        if(result.rowsAffected > 0){
+
+            resolve(true);
+            return;
+        }
+        else{
+        resolve(false);
+        return;
+        }
+    //return false in an error occurs
+    } catch(err){
+        console.dir(err);
+        reject(err);
+    }
+});
+}
 
 module.exports = {
     sendRequest,
     acceptRequest,
     deleteFriendship,
     search,
-    returnFriendsList
+    returnFriendsList,
+    isActiveFriend
 }
 

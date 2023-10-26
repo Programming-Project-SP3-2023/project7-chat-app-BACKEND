@@ -32,7 +32,7 @@ router.delete('/delete', jsonparser, (req, res, next) => {
 });
 
 //return users matching entered name
-router.get('/search', jsonparser, (req, res, next) => {
+router.post('/search', jsonparser, (req, res, next) => {
     //check if token is valid (TODO)
 
     //send search params to the controller, which returns a list in JSON
@@ -40,7 +40,7 @@ router.get('/search', jsonparser, (req, res, next) => {
 });
 
 //return a list of users friends or friendrequests
-router.get('/friends', jsonparser, (req, res, next) => {
+router.post('/friends', jsonparser, (req, res, next) => {
     //check if token is valid (TODO)
 
     //send accountID to the controller, which returns a list of friendships in JSON
