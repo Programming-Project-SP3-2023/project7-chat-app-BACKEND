@@ -238,10 +238,14 @@ function initialiseSockets(server, frontEndpoint) {
 
         socket.on('leaveVC', (channelID) => {
             if (socket.rooms.has(channelID)) {
+                socket.to(channelID).emit("userLeftVC", {
+                    peerID: socket.accountID
+                });
                 socket.leave(channelID);
                 socket.emit("updateVCStatus", {
                     "response": "left channel"
                 });
+
             }
         });
 
