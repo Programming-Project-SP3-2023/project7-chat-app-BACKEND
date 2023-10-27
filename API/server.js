@@ -11,6 +11,7 @@ const app = require('./app');
 const config = require('./config');
 const hostname = 'echo.matthewrosin.com';
 const port = 4000;
+const frontEndpoint = "https://main.d11izrd17dq8t7.amplifyapp.com";
 
 const server = https.createServer(https_options, app);
 */
@@ -23,6 +24,7 @@ const config = require('./config');
 const { ExpressPeerServer  } = require("peer");
 const socketHandler = require('./middleware/socketHandler');
 const port = 4000;
+const frontEndpoint = "http://localhost:3000";
 
 const server = http.createServer(app);
 const peerServer = ExpressPeerServer(server, {
@@ -32,6 +34,8 @@ const peerServer = ExpressPeerServer(server, {
 
 app.use("/peerjs", peerServer);
 
-socketHandler.initialiseSockets(server);
+socketHandler.initialiseSockets(server, frontEndpoint);
+
+
 
 server.listen(port);
