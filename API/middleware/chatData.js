@@ -64,9 +64,9 @@ function formatDate(date) {
 
 async function isValidChatID(chatID) {
 
-        try {
-            console.log("checking chat ID is valid now with chatid " + chatID);
-            if(chatID){
+    try {
+        console.log("checking chat ID is valid now with chatid " + chatID);
+        if (chatID) {
             sql.connect(sqlConfig.returnServerConfig()).then(async function () {
                 const query = `SELECT FriendshipID from Friendships WHERE FriendshipID = ${chatID}`;
 
@@ -83,15 +83,47 @@ async function isValidChatID(chatID) {
                 }
             });
         }
-        else{
+        else {
             return false;
         }
 
-            //return false in an error occurs
-        } catch (err) {
+        //return false in an error occurs
+    } catch (err) {
+        return false;
+    }
+}
+
+async function isValidVOIPID(channelID) {
+
+    try {
+        if (channelID) {
+            sql.connect(sqlConfig.returnServerConfig()).then(async function () {
+                const query = `SELECT ChannelID from Channels WHERE FriendshipID = ${chatID}`;
+
+
+                const result = await sql.query(query);
+
+                if (result.rowsAffected > 0) {
+                    console.log("ChatID in db")
+                    return true;
+                }
+                else {
+                    // //return false if not found
+                    return false;
+                }
+            });
+        }
+        else {
             return false;
         }
+
+        //return false in an error occurs
+    } catch (err) {
+        return false;
+    }
 }
+
+
 
 
 module.exports = {

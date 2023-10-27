@@ -180,6 +180,79 @@ function initialiseSockets(server) {
             }
         });
 
+
+
+        //VOIP Channels
+
+        socket.on('joinVC', (channelID) => {
+            //checking if socket is already in room.
+            if (!socket.rooms.has(channelID)) {
+                isValidID = chatData.isValidVOIPID(channelID)
+                if (isValidID) {
+                    console.log("socket not already in VC room, joining room");
+                    socket.join(channelID);
+                    socket.emit("updateVCStatus", {
+                        "response": "joined channel"
+                    });
+                    //announce to all members of voice chat of the user joining and ask them to connect
+                    socket.to(channelID).emit("userJoinVC", {
+                        peerID: socket.accountID
+                    });
+                }
+                else {
+                    socket.emit("error", {
+                        "error": "channelID not valid"
+                    });
+                }
+            }
+            else{
+                socket.emit("error", {
+                    "error": "VC already connected."
+                });
+            }
+        });
+
+        socket.on('leaveVC', (channelID) => {
+            if (socket.rooms.has(channelID)){
+                socket.leave(channelID);
+                socket.emit("updateVCStatus", {
+                    "response": "left channel"
+                });
+            }
+        });
+
+        socket.on('switchVC', (channelID, newChannelID) => {
+            if(socket.rooms.has(channelID)){
+                isValidID = chatData.isValidVOIPID(newChannelID)
+                if (isValidID) {
+                    socket.leave(channelID);
+                    socket.emit("updateVCStatus", {
+                        "response": "left channel"
+                    });
+                    socket.join(newChannelID);
+                    socket.emit("updateVCStatus", {
+                        "response": "joined channel"
+                    });
+                    //announce to all members of voice chat of the user joining and ask them to connect
+                    socket.to(newChannelID).emit("userJoinVC", {
+                        peerID: socket.accountID
+                    });
+                }
+                else {
+                    socket.emit("error", {
+                        "error": "channelID not valid"
+                    });
+                }                
+            }
+            else{
+                socket.emit("error", {
+                    "error": "VC not connected."
+                });                
+            }
+        });
+
+        
+
     });
 
 }
