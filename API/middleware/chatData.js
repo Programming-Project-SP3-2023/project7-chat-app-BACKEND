@@ -93,18 +93,18 @@ async function isValidChatID(chatID, accountID) {
     }
 }
 
-async function isValidVOIPID(channelID) {
+async function isValidChannelID(channelID, accountID) {
 
     try {
         if (channelID) {
             sql.connect(sqlConfig.returnServerConfig()).then(async function () {
-                const query = `SELECT ChannelID from Channels WHERE FriendshipID = ${chatID}`;
+                const query = `SELECT ChannelID from Channels WHERE ChannelID = ${channelID}`;
 
 
                 const result = await sql.query(query);
 
                 if (result.rowsAffected > 0) {
-                    console.log("ChatID in db")
+                    console.log("Channel in db")
                     return true;
                 }
                 else {
@@ -123,32 +123,27 @@ async function isValidVOIPID(channelID) {
     }
 }
 
-async function isValidChannelID(channelID, accountID) {
-
+async function hasAccessToChannel(channelID, accountID){
     try {
-        console.log("checking channel ID is valid now with channel " + channelID + " " + accountID);
-        if(channelID){
-        // sql.connect(sqlConfig.returnServerConfig()).then(async function () {
-        //     const query = `SELECT ChannelID from Channels WHERE Channel = ${channelID}`;
+        if (channelID) {
+            sql.connect(sqlConfig.returnServerConfig()).then(async function () {
+                const query = `SELECT MemberID from ChannelMembers WHERE ChannelID = ${channelID} AND MemberID = ${accountID}`;
 
 
-        //     const result = await sql.query(query);
+                const result = await sql.query(query);
 
-        //     if (result.rowsAffected > 0) {
-        //         console.log("ChatID in db")
-        //         return true;
-        //     }
-        //     else {
-        //         // //return false if not found
-        //         return false;
-        //     }
-        // });
-        //we dont have a DB check yet
-        return true;
-    }
-    else{
-        return false;
-    }
+                if (result.rowsAffected > 0) {
+                    return true;
+                }
+                else {
+                    // //return false if not found
+                    return false;
+                }
+            });
+        }
+        else {
+            return false;
+        }
 
         //return false in an error occurs
     } catch (err) {
@@ -165,4 +160,5 @@ module.exports = {
     formatDate,
     isValidChatID,
     isValidChannelID,
+    hasAccessToChannel
 };

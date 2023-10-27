@@ -65,7 +65,7 @@ function initialiseSockets(server, frontEndpoint) {
                                 console.log("socket not me, running")
 
                                 friends.push(globalSocket.accountID);
-                                
+
                             }
                         }
                     });
@@ -74,7 +74,7 @@ function initialiseSockets(server, frontEndpoint) {
             }
             await Promise.all(friendshipPromises);
             console.log("emitting friends: ");
-            for(i=0; i<friends.length; i++){
+            for (i = 0; i < friends.length; i++) {
                 console.log(friends[i]);
             }
             socket.emit("onlineFriends", friends);
@@ -106,7 +106,7 @@ function initialiseSockets(server, frontEndpoint) {
             }
         });
 
-        socket.on("connectChannel", ({channelID, accountID}) => {
+        socket.on("connectChannel", ({ channelID, accountID }) => {
             if (!socket.rooms.has(channelID)) {
                 isValidID = chatData.isValidChannelID(channelID, accountID)
                 console.log("we're in the isvalid method now vaid is " + isValidID)
@@ -208,17 +208,20 @@ function initialiseSockets(server, frontEndpoint) {
         socket.on('joinVC', (channelID) => {
             //checking if socket is already in room.
             if (!socket.rooms.has(channelID)) {
-                isValidID = chatData.isValidVOIPID(channelID)
+                isValidID = chatData.isValidChannelID(channelID)
                 if (isValidID) {
-                    console.log("socket not already in VC room, joining room");
-                    socket.join(channelID);
-                    socket.emit("updateVCStatus", {
-                        "response": "joined channel"
-                    });
-                    //announce to all members of voice chat of the user joining and ask them to connect
-                    socket.to(channelID).emit("userJoinVC", {
-                        peerID: socket.accountID
-                    });
+                    hasAccess = chatData.hasAccessToChannel(channelID, socket.accountID);
+                    if (hasAccess) {
+                        console.log("socket not already in VC room, joining room");
+                        socket.join(channelID);
+                        socket.emit("updateVCStatus", {
+                            "response": "joined channel"
+                        });
+                        //announce to all members of voice chat of the user joining and ask them to connect
+                        socket.to(channelID).emit("userJoinVC", {
+                            peerID: socket.accountID
+                        });
+                    }
                 }
                 else {
                     socket.emit("error", {
@@ -226,7 +229,7 @@ function initialiseSockets(server, frontEndpoint) {
                     });
                 }
             }
-            else{
+            else {
                 socket.emit("error", {
                     "error": "VC already connected."
                 });
@@ -234,7 +237,7 @@ function initialiseSockets(server, frontEndpoint) {
         });
 
         socket.on('leaveVC', (channelID) => {
-            if (socket.rooms.has(channelID)){
+            if (socket.rooms.has(channelID)) {
                 socket.leave(channelID);
                 socket.emit("updateVCStatus", {
                     "response": "left channel"
@@ -243,36 +246,39 @@ function initialiseSockets(server, frontEndpoint) {
         });
 
         socket.on('switchVC', (channelID, newChannelID) => {
-            if(socket.rooms.has(channelID)){
-                isValidID = chatData.isValidVOIPID(newChannelID)
+            if (socket.rooms.has(channelID)) {
+                isValidID = chatData.isValidChannelID(newChannelID)
                 if (isValidID) {
-                    socket.leave(channelID);
-                    socket.emit("updateVCStatus", {
-                        "response": "left channel"
-                    });
-                    socket.join(newChannelID);
-                    socket.emit("updateVCStatus", {
-                        "response": "joined channel"
-                    });
-                    //announce to all members of voice chat of the user joining and ask them to connect
-                    socket.to(newChannelID).emit("userJoinVC", {
-                        peerID: socket.accountID
-                    });
+                    hasAccess = chatData.hasAccessToChannel(channelID, socket.accountID);
+                    if (hasAccess) {
+                        socket.leave(channelID);
+                        socket.emit("updateVCStatus", {
+                            "response": "left channel"
+                        });
+                        socket.join(newChannelID);
+                        socket.emit("updateVCStatus", {
+                            "response": "joined channel"
+                        });
+                        //announce to all members of voice chat of the user joining and ask them to connect
+                        socket.to(newChannelID).emit("userJoinVC", {
+                            peerID: socket.accountID
+                        });
+                    }
                 }
                 else {
                     socket.emit("error", {
                         "error": "channelID not valid"
                     });
-                }                
+                }
             }
-            else{
+            else {
                 socket.emit("error", {
                     "error": "VC not connected."
-                });                
+                });
             }
         });
 
-        
+
 
     });
 
