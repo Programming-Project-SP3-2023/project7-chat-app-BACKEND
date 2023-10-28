@@ -52,7 +52,37 @@ const addMember = async(req, res) =>{
 
 const removeMember = async(req, res)=>{
     try{
+        const {memberId, groupId} = req.body;
 
+        //db
+        const pool = await sql.connect(sqlcConfig);
+        const memberExistsQuery = `
+        SELECT 1
+        FROM GroupMembers
+        WHERE MemberID = @memberId
+        AND GroupID = @groupId
+        `;
+        const memberExistsResult = await pool
+        .request()
+        .input('memberId', sql.Int, memberId)
+        .input('groupId', sql.Int, groupId)
+        .query(memberExistsQuery);
+        if(memberExistsResult.rowsAffected[0] !== 1){
+            return res.status(404).json({ message: 'Member not found'})
+        }
+        //remove member
+        const removeMemberQuery = `
+        DELETE FROM GroupMembers
+        WHERE MemberID = @memberId
+        AND GroupID = @groupId
+        `;
+        await pool
+        .request()
+        .input('memberId', sql.Int, memberId)
+        .input('groupId', sql.Int, groupId)
+        .query(removeMemberQuery);
+        
+        return res.status(200).json({message: 'Member removed from the group'})
     }catch(error){
         console.error(error);
         return res.status(500).json({message: 'Internal Server Error'});
@@ -60,10 +90,40 @@ const removeMember = async(req, res)=>{
 };
 
 
-//Returns all group info including a members list
+//returns all group info including a members list
 const groupInfo = async(req, res)=>{
     try{
+        const groupId = req.params.groupId;
 
+        // db
+        const pool = await sql.connect(sqlConfig);
+
+        // get group info
+        const groupInfoQuery = `
+            SELECT G.GroupName, G.GroupAvatar, GM.AccountID
+            FROM Groups G
+            JOIN GroupMembers GM ON G.GroupID = GM.GroupID
+            WHERE G.GroupID = @groupId
+        `;
+
+        const groupInfoResult = await pool
+            .request()
+            .input('groupId', sql.Int, groupId)
+            .query(groupInfoQuery);
+
+        if (groupInfoResult.recordset.length === 0) {
+            return res.status(404).json({ message: 'Group not found' });
+            
+        // get group name, avatar, and member AccountIDs from the query result
+        const groupInfo = {
+            groupName: groupInfoResult.recordset[0].GroupName,
+            groupAvatar: groupInfoResult.recordset[0].GroupAvatar,
+            members: groupInfoResult.recordset.map((row) => row.AccountID),
+        };
+
+        return res.status(200).json(groupInfo);
+
+        }
     }catch(error){
         console.error(error);
         return res.status(500).json({message: 'Internal Server Error'});

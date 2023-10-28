@@ -29,7 +29,8 @@ CREATE TABLE [dbo].[Friendships](
 /****** Groups ******/
 CREATE TABLE [dbo].[Groups](
     GroupID int NOT NULL PRIMARY KEY,
-    GroupName varchar(50) NOT NULL
+    GroupName varchar(50) NOT NULL,
+	GroupAvatar varchar(max),
 );
 
 /****** GroupMembers ******/
