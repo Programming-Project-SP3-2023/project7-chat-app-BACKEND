@@ -113,7 +113,7 @@ const groupInfo = async(req, res)=>{
 
         if (groupInfoResult.recordset.length === 0) {
             return res.status(404).json({ message: 'Group not found' });
-            
+
         // get group name, avatar, and member AccountIDs from the query result
         const groupInfo = {
             groupName: groupInfoResult.recordset[0].GroupName,
@@ -207,6 +207,6 @@ const createGroup = async (req, res) => {
         return res.status(500).json({ message: 'Server error' });
     }
 };
-    module.exports = {deleteGroup, createGroup,
+    module.exports = {deleteGroup, createGroup, removeMember, groupInfo,
 
     };
