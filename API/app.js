@@ -19,6 +19,7 @@ const loginRoutes = require('./routes/login');
 const friendshipsRoutes = require('./routes/friendships');
 const avatarRoutes = require('./routes/avatar');
 const profileRoutes = require('./routes/profile');
+const verifyEmailRouter = require('./routes/verifyemail');
 
 
 //setup all the routes
@@ -27,6 +28,8 @@ app.use('/login', loginRoutes);
 app.use('/avatar', avatarRoutes)
 app.use('/profile', profileRoutes);
 app.use('/friendships', friendshipsRoutes);
+app.use('/verifyemail', verifyEmailRouter);
+
 
 
 //export the app
