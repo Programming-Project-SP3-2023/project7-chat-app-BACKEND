@@ -5,6 +5,8 @@ CREATE TABLE [dbo].[Accounts](
 	DisplayName varchar(50) NOT NULL,
 	Dob date NOT NULL,
 	Avatar varchar(max),
+	IsVerified bit NOT NULL DEFAULT 0, -- Add IsVerified column
+    EmailToken varchar(64), -- Add EmailToken column
 	PRIMARY KEY (AccountID)
 )
 
