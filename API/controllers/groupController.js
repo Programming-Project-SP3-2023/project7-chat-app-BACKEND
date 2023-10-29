@@ -7,6 +7,36 @@ const router = express.Router();
 
 
 
+//Return list of group IDs for a user
+
+const currentGroups = async (req, res) =>{
+    try{
+        //account id from req with token data
+        const userId = req.user.AccountID;
+        const pool = await sql.connect(sqlConfig);
+        //query to get IDs for the user
+        const currentGroupsQuery =`
+        SELECT GroupID
+        FROM GroupMembers
+        WHERE AccountID = @userId
+        `;
+
+        const currentGroupsResult = await pool
+        .request()
+        .input('userId', sql.Int, userId)
+        .query(currentGroupsQuery);
+
+        //get group IDs from result
+        const groupIds = currentGroupsResult.recordset.map((row) => row.GroupID);
+
+        return res.status(200).json({ groupIds });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
+
 
 
 //Add a user to a group via email

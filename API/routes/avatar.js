@@ -9,4 +9,5 @@ router.post('/upload', authenticateToken, avatarController.uploadAvatar);
 
 //Get avatar
 router.get('/:userId', authenticateToken, avatarController.getAvatar);
+router.post('/upload-group-avatar', authenticateToken, uploadGroupAvatar);
 module.exports = router;
