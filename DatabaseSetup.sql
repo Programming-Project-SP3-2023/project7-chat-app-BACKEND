@@ -30,39 +30,38 @@ CREATE TABLE [dbo].[Friendships](
 
 /****** Groups ******/
 CREATE TABLE [dbo].[Groups](
-	GroupID int NOT NULL PRIMARY KEY,
-	GroupName varchar(50) NOT NULL,
-)
+    GroupID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    GroupName varchar(50) NOT NULL,
+    GroupAvatar varchar(max)
+);
 
 /****** GroupMembers ******/
 CREATE TABLE [dbo].[GroupMembers](
-	MemberID int NOT NULL,
-	AccountID int NOT NULL,
-	GroupID int NOT NULL,
-	Role varchar(50) NOT NULL,
-	Status varchar(50) NOT NULL,
-	FOREIGN KEY (AccountID) REFERENCES Accounts(AccountID),
-	FOREIGN KEY (GroupID) REFERENCES Groups(GroupID),
-	CONSTRAINT PK_GroupMembers PRIMARY KEY (MemberID)
-)
+    MemberID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    AccountID int NOT NULL,
+    GroupID int NOT NULL,
+    Role varchar(50) NOT NULL,
+    FOREIGN KEY (AccountID) REFERENCES Accounts(AccountID),
+    FOREIGN KEY (GroupID) REFERENCES Groups(GroupID)
+);
 
 /****** Channels ******/
 CREATE TABLE [dbo].[Channels](
-	ChannelID int NOT NULL PRIMARY KEY,
-	GroupID int NOT NULL,
-	ChannelType varchar(50) NOT NULL,
-	Visibility varchar(50) NOT NULL,
-	FOREIGN KEY (GroupID) REFERENCES Groups(GroupID)
-)
+    ChannelID int NOT NULL PRIMARY KEY,
+    GroupID int NOT NULL,
+    ChannelType varchar(50) NOT NULL,
+    Visibility varchar(50) NOT NULL,
+    FOREIGN KEY (GroupID) REFERENCES Groups(GroupID)
+);
 
 /****** Channel Members ******/
 CREATE TABLE [dbo].[ChannelMembers](
-	MemberID int NOT NULL,
-	ChannelID int NOT NULL,
-	FOREIGN KEY (MemberID) REFERENCES GroupMembers(MemberID),
-	FOREIGN KEY (ChannelID) REFERENCES Channels(ChannelID),
-	CONSTRAINT PK_ChannelMembers PRIMARY KEY (MemberID, ChannelID)
-)
+    MemberID int NOT NULL,
+    ChannelID int NOT NULL,
+    FOREIGN KEY (MemberID) REFERENCES GroupMembers(MemberID),
+    FOREIGN KEY (ChannelID) REFERENCES Channels(ChannelID),
+    CONSTRAINT PK_ChannelMembers PRIMARY KEY (MemberID, ChannelID)
+);
 /****** Avatars ******/
 CREATE TABLE [dbo].[Avatars](
 	AvatarID int NOT NULL IDENTITY(1,1),

@@ -19,7 +19,9 @@ const loginRoutes = require('./routes/login');
 const friendshipsRoutes = require('./routes/friendships');
 const avatarRoutes = require('./routes/avatar');
 const profileRoutes = require('./routes/profile');
+const groupsRoutes = require('./routes/groups');
 const verifyEmailRouter = require('./routes/verifyemail');
+
 
 
 //setup all the routes
@@ -28,6 +30,7 @@ app.use('/login', loginRoutes);
 app.use('/avatar', avatarRoutes)
 app.use('/profile', profileRoutes);
 app.use('/friendships', friendshipsRoutes);
+app.use('/groups', groupsRoutes);
 app.use('/verifyemail', verifyEmailRouter);
 
 
