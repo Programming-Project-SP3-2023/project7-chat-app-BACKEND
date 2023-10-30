@@ -94,6 +94,7 @@ async function isValidChatID(chatID, accountID) {
 }
 
 async function isValidChannelID(channelID, accountID) {
+    console.log(channelID);
 
     try {
         if (channelID) {

@@ -27,12 +27,12 @@ const port = 4000;
 const frontEndpoint = "http://localhost:3000";
 
 const server = http.createServer(app);
-const peerServer = ExpressPeerServer(server, {
-    debug: true,
-    path: "/myapp",
-});
+// const peerServer = ExpressPeerServer(server, {
+//     debug: true,
+//     path: "/myapp",
+// });
 
-app.use("/peerjs", peerServer);
+// app.use("/peerjs", peerServer);
 
 socketHandler.initialiseSockets(server, frontEndpoint);
 

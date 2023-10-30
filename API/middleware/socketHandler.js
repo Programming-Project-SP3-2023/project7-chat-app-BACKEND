@@ -206,28 +206,30 @@ function initialiseSockets(server, frontEndpoint) {
         //VOIP Channels
 
         socket.on('joinVC', (channelID) => {
-            //checking if socket is already in room.
+            console.log(socket.rooms);
+            // console.log(channelID);
+            // //checking if socket is already in room.
             if (!socket.rooms.has(channelID)) {
-                isValidID = chatData.isValidChannelID(channelID)
-                if (isValidID) {
-                    hasAccess = chatData.hasAccessToChannel(channelID, socket.accountID);
-                    if (hasAccess) {
-                        console.log("socket not already in VC room, joining room");
+            //     isValidID = chatData.isValidChannelID(channelID)
+            //     if (isValidID) {
+            //         hasAccess = chatData.hasAccessToChannel(channelID, socket.accountID);
+            //         if (hasAccess) {
                         socket.join(channelID);
-                        socket.emit("updateVCStatus", {
-                            "response": "joined channel"
-                        });
+
+
+
+                        // socket.emit("updateVCStatus", {
+                        //     "response": "joined channel"
+                        // });
                         //announce to all members of voice chat of the user joining and ask them to connect
-                        socket.to(channelID).emit("userJoinVC", {
-                            peerID: socket.accountID
-                        });
-                    }
-                }
-                else {
-                    socket.emit("error", {
-                        "error": "channelID not valid"
-                    });
-                }
+                        socket.to(channelID).emit('userJoinVC', 'hi');
+            //         }
+            //     }
+            //     else {
+            //         socket.emit("error", {
+            //             "error": "channelID not valid"
+            //         });
+            //     }
             }
             else {
                 socket.emit("error", {
