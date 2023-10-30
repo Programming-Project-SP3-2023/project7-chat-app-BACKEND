@@ -108,7 +108,7 @@ function search(DisplayName, res){
     try{
         sql.connect(sqlConfig.returnServerConfig()).then(async function(){
             //select results similar to the input display name entered
-            const result = await sql.query('SELECT AccountID, Email, DisplayName FROM Accounts WHERE DisplayName LIKE \'%' + DisplayName + '%\' ')
+            const result = await sql.query('SELECT AccountID, Email, DisplayName, Avatar FROM Accounts WHERE DisplayName LIKE \'%' + DisplayName + '%\' ')
             
             const userList = result.recordsets;
             //return any results found
