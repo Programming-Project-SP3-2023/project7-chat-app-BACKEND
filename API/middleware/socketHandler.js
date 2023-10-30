@@ -205,7 +205,7 @@ function initialiseSockets(server, frontEndpoint) {
 
         //VOIP Channels
 
-        socket.on('joinVC', (channelID) => {
+        socket.on('joinVC', ({channelID}) => {
             console.log(socket.rooms);
             // console.log(channelID);
             // //checking if socket is already in room.
@@ -238,7 +238,7 @@ function initialiseSockets(server, frontEndpoint) {
             }
         });
 
-        socket.on('leaveVC', (channelID) => {
+        socket.on('leaveVC', ({channelID}) => {
             if (socket.rooms.has(channelID)) {
                 socket.to(channelID).emit("userLeftVC", {
                     peerID: socket.accountID
@@ -251,7 +251,7 @@ function initialiseSockets(server, frontEndpoint) {
             }
         });
 
-        socket.on('switchVC', (channelID, newChannelID) => {
+        socket.on('switchVC', ({channelID, newChannelID}) => {
             if (socket.rooms.has(channelID)) {
                 isValidID = chatData.isValidChannelID(newChannelID)
                 if (isValidID) {
