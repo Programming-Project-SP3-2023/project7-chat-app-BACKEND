@@ -9,24 +9,25 @@ const router = express.Router();
 
 //Return list of group IDs for a user
 
-const currentGroups = async (req, res) =>{
-    try{
-        //account id from req with token data
+const currentGroups = async (req, res) => {
+    try {
+        // Account ID from req with token data
         const userId = req.user.AccountID;
-        const pool = await sql.connect(sqlConfig);
-        //query to get IDs for the user
-        const currentGroupsQuery =`
-        SELECT GroupID
-        FROM GroupMembers
-        WHERE AccountID = @userId
+        const pool = await sql.connect(sqlConfig.returnServerConfig());
+
+        // Get IDs for the user
+        const currentGroupsQuery = `
+            SELECT GroupID
+            FROM GroupMembers
+            WHERE AccountID = @AccountID
         `;
 
         const currentGroupsResult = await pool
-        .request()
-        .input('userId', sql.Int, userId)
-        .query(currentGroupsQuery);
+            .request()
+            .input('AccountID', sql.Int, userId)
+            .query(currentGroupsQuery);
 
-        //get group IDs from result
+        // Get group IDs
         const groupIds = currentGroupsResult.recordset.map((row) => row.GroupID);
 
         return res.status(200).json({ groupIds });
@@ -45,7 +46,7 @@ const addMember = async(req, res) =>{
         const {email, groupId} = req.body;
 
         //db connect
-        const pool = await sql.connect(sqlConfig);
+        const pool = await sql.connect(sqlConfig.returnServerConfig());
 
         //get acctID of user with specified email
         const getUserQuery = `
@@ -64,8 +65,8 @@ const addMember = async(req, res) =>{
 
         //add user to group
         const addMemberQuery = `
-        INSERT INTO GroupMembers (AccountID, GroupID, Role, Status)
-        VALUES (@accountId, @groupId, 'Member', 'Active')
+        INSERT INTO GroupMembers (AccountID, GroupID, Role)
+        VALUES (@accountId, @groupId, 'Member')
         `;
         await pool
         .request()
@@ -82,19 +83,19 @@ const addMember = async(req, res) =>{
 
 const removeMember = async(req, res)=>{
     try{
-        const {memberId, groupId} = req.body;
+        const {accountId, groupId} = req.body;
 
         //db
-        const pool = await sql.connect(sqlcConfig);
+        const pool = await sql.connect(sqlConfig.returnServerConfig());
         const memberExistsQuery = `
         SELECT 1
         FROM GroupMembers
-        WHERE MemberID = @memberId
+        WHERE AccountID = @accountId
         AND GroupID = @groupId
         `;
         const memberExistsResult = await pool
         .request()
-        .input('memberId', sql.Int, memberId)
+        .input('accountId', sql.Int, accountId)
         .input('groupId', sql.Int, groupId)
         .query(memberExistsQuery);
         if(memberExistsResult.rowsAffected[0] !== 1){
@@ -103,12 +104,12 @@ const removeMember = async(req, res)=>{
         //remove member
         const removeMemberQuery = `
         DELETE FROM GroupMembers
-        WHERE MemberID = @memberId
+        WHERE AccountID = @accountId
         AND GroupID = @groupId
         `;
         await pool
         .request()
-        .input('memberId', sql.Int, memberId)
+        .input('accountId', sql.Int, accountId)
         .input('groupId', sql.Int, groupId)
         .query(removeMemberQuery);
         
@@ -119,18 +120,16 @@ const removeMember = async(req, res)=>{
     }
 };
 
-
 //returns all group info including a members list
-const groupInfo = async(req, res)=>{
-    try{
+const groupInfo = async (req, res) => {
+    try {
         const groupId = req.params.groupId;
 
         // db
-        const pool = await sql.connect(sqlConfig);
-
+        const pool = await sql.connect(sqlConfig.returnServerConfig());
         // get group info
         const groupInfoQuery = `
-            SELECT G.GroupName, G.GroupAvatar, GM.AccountID
+            SELECT G.GroupName, G.GroupAvatar, GM.MemberID, GM.AccountID
             FROM Groups G
             JOIN GroupMembers GM ON G.GroupID = GM.GroupID
             WHERE G.GroupID = @groupId
@@ -140,9 +139,9 @@ const groupInfo = async(req, res)=>{
             .request()
             .input('groupId', sql.Int, groupId)
             .query(groupInfoQuery);
-
         if (groupInfoResult.recordset.length === 0) {
             return res.status(404).json({ message: 'Group not found' });
+        }
 
         // get group name, avatar, and member AccountIDs from the query result
         const groupInfo = {
@@ -150,20 +149,19 @@ const groupInfo = async(req, res)=>{
             groupAvatar: groupInfoResult.recordset[0].GroupAvatar,
             members: groupInfoResult.recordset.map((row) => row.AccountID),
         };
-
         return res.status(200).json(groupInfo);
-
-        }
-    }catch(error){
+    } catch (error) {
         console.error(error);
-        return res.status(500).json({message: 'Internal Server Error'});
+        return res.status(500).json({ message: 'Internal Server Error' });
     }
 };
+
+
 const deleteGroup = async (req, res) => {
     try{
         const groupId = req.params.groupId;
         const userAccountId = req.user.AccountID;
-        const pool = await sql.connect(sqlConfig);
+        const pool = await sql.connect(sqlConfig.returnServerConfig());
 
         //Check if user is the admin of the group
         const isAdminQuery = `
@@ -199,7 +197,7 @@ const deleteGroup = async (req, res) => {
         return res.status(500).json ({message: 'Internal Server Error'});
     }
     };
-//create a new group
+
 
 const createGroup = async (req, res) => {
     try {
@@ -213,7 +211,7 @@ const createGroup = async (req, res) => {
         const creatorAccountId = req.user.AccountID;
 
         // Create a new database connection pool
-        const pool = await sql.connect(sqlConfig);
+        const pool = await sql.connect(sqlConfig.returnServerConfig());
 
         // Insert a new group into the Groups table
         const groupResult = await pool
@@ -237,6 +235,6 @@ const createGroup = async (req, res) => {
         return res.status(500).json({ message: 'Server error' });
     }
 };
-    module.exports = {deleteGroup, createGroup, removeMember, groupInfo,
+    module.exports = {deleteGroup, createGroup, removeMember, groupInfo, currentGroups, addMember, 
 
     };

@@ -6,7 +6,7 @@ const sqlConfig = require('../config');
 // Upload an avatar
 const uploadAvatar = async (req, res) => {
     try {
-        console.dir('Upload avatar route reached.'); // TODO - delete
+
         // account id from req with token data
         const userId = req.user.AccountID;
 
