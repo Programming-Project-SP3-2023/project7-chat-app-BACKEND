@@ -17,6 +17,7 @@ function initialiseSockets(server, frontEndpoint) {
 
             socket.accountID = accountID;
             socket.username = username;
+            socket.connectedGroupID = null;
             if (socket.accountID && socket.username) {
                 socket.emit("connectionResponse", {
                     "response": "OK"
@@ -106,27 +107,6 @@ function initialiseSockets(server, frontEndpoint) {
             }
         });
 
-        socket.on("connectChannel", ({ channelID, accountID }) => {
-            if (!socket.rooms.has(channelID)) {
-                isValidID = chatData.isValidChannelID(channelID, accountID)
-                console.log("we're in the isvalid method now vaid is " + isValidID)
-                if (isValidID) {
-                    console.log("socket not already in group room, joining room");
-                    socket.join(channelID);
-                }
-                else {
-                    socket.emit("error", {
-                        "error": "ChannelID not valid"
-                    });
-                }
-            }
-            if (socket.rooms.has(channelID)) {
-                socket.emit("connectChannelResponse", {
-                    "response": "OK"
-                });
-            }
-        });
-
         socket.on("getMessages", ({ chatID }) => {
             console.log("checking messages for " + chatID)
             if (socket.rooms.has(chatID)) {
@@ -201,11 +181,68 @@ function initialiseSockets(server, frontEndpoint) {
             }
         });
 
+        //group sockets
 
+        socket.on("connectGroup", ({groupID}) => {
+
+            //checks two things:
+            //1. is this a real group ID? and
+            //2. is this account a member of the group?
+
+            //testing!!!!!!!
+            //groupID = 3;
+            console.log(groupID)
+
+            if(chatData.isValidGroupID(groupID, socket.accountID)){
+
+                //checks if group is already connected, and disconnects it if so
+                if(socket.connectedGroupID){
+                    socket.emit("disconnectGroup");
+                }
+
+                socket.connectedGroupID = groupID;
+
+                channels = chatData.getChannels(socket.accountID, socket.connectedGroupID);
+
+
+                socket.on("connectChannel", ({ channelID, accountID }) => {
+                    if (!socket.rooms.has(channelID)) {
+                        isValidID = chatData.isValidChannelID(channelID, socket.connectedGroupID, accountID)
+                        console.log("we're in the isvalid method now vaid is " + isValidID)
+                        if (isValidID) {
+                            console.log("socket not already in group room, joining room");
+                            socket.join(channelID);
+                        }
+                        else {
+                            socket.emit("error", {
+                                "error": "Channel not valid or user does not have permission to view."
+                            });
+                        }
+                    }
+                    if (socket.rooms.has(channelID)) {
+                        socket.emit("connectChannelResponse", {
+                            "response": "OK"
+                        });
+                    }
+                });
+
+
+
+
+            }
+
+
+
+
+        });
+
+        socket.on("disconnectGroup", () => {
+            socket.connectedGroupID = null;
+        });
 
         //VOIP Channels
 
-        socket.on('joinVC', (channelID) => {
+        socket.on('joinVC', ({channelID}) => {
             //checking if socket is already in room.
             if (!socket.rooms.has(channelID)) {
                 isValidID = chatData.isValidChannelID(channelID)
@@ -236,7 +273,7 @@ function initialiseSockets(server, frontEndpoint) {
             }
         });
 
-        socket.on('leaveVC', (channelID) => {
+        socket.on('leaveVC', ({channelID}) => {
             if (socket.rooms.has(channelID)) {
                 socket.to(channelID).emit("userLeftVC", {
                     peerID: socket.accountID
@@ -249,7 +286,7 @@ function initialiseSockets(server, frontEndpoint) {
             }
         });
 
-        socket.on('switchVC', (channelID, newChannelID) => {
+        socket.on('switchVC', ({channelID, newChannelID}) => {
             if (socket.rooms.has(channelID)) {
                 isValidID = chatData.isValidChannelID(newChannelID)
                 if (isValidID) {

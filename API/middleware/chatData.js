@@ -93,35 +93,7 @@ async function isValidChatID(chatID, accountID) {
     }
 }
 
-async function isValidChannelID(channelID, accountID) {
 
-    try {
-        if (channelID) {
-            sql.connect(sqlConfig.returnServerConfig()).then(async function () {
-                const query = `SELECT ChannelID from Channels WHERE ChannelID = ${channelID}`;
-
-
-                const result = await sql.query(query);
-
-                if (result.rowsAffected > 0) {
-                    console.log("Channel in db")
-                    return true;
-                }
-                else {
-                    // //return false if not found
-                    return false;
-                }
-            });
-        }
-        else {
-            return false;
-        }
-
-        //return false in an error occurs
-    } catch (err) {
-        return false;
-    }
-}
 
 async function hasAccessToChannel(channelID, accountID){
     try {
@@ -153,6 +125,137 @@ async function hasAccessToChannel(channelID, accountID){
 
 
 
+
+//group functions
+
+async function isValidGroupID(groupID, accountID) {
+
+    try {
+        if (groupID) {
+            sql.connect(sqlConfig.returnServerConfig()).then(async function () {
+                const query = `SELECT GroupID from Groups WHERE GroupID = ${groupID}`;
+
+
+                const result = await sql.query(query);
+
+                if (result.rowsAffected > 0) {
+                    console.log("groupID in db")
+                    if(isInGroup(groupID, accountID)){
+                        return true;
+                    }
+                    else{
+                        return false;
+                    }
+                    
+                }
+                else {
+                    // //return false if not found
+                    return false;
+                }
+            });
+        }
+        else {
+            return false;
+        }
+
+        //return false in an error occurs
+    } catch (err) {
+        return false;
+    }
+}
+
+async function isInGroup(groupID, accountID){
+    try {
+        if (groupID) {
+            sql.connect(sqlConfig.returnServerConfig()).then(async function () {
+                const query = `SELECT MemberID from GroupMembers WHERE GroupID = ${groupID} AND AccountID = ${accountID}`;
+
+
+                const result = await sql.query(query);
+
+                if (result.rowsAffected > 0) {
+                    console.log("account is member of grp in db")
+                    return true;
+                }
+                else {
+                    // //return false if not found
+                    return false;
+                }
+            });
+        }
+        else {
+            return false;
+        }
+
+        //return false in an error occurs
+    } catch (err) {
+        return false;
+    }
+}
+
+
+async function isValidChannelID(channelID, groupID, accountID) {
+
+    try {
+        if (channelID) {
+            sql.connect(sqlConfig.returnServerConfig()).then(async function () {
+                const query = `SELECT ChannelID from Channels WHERE ChannelID = ${channelID}`;
+
+
+                const result = await sql.query(query);
+
+                if (result.rowsAffected > 0) {
+                    console.log("Channel in db")
+                    return true;
+                }
+                else {
+                    // //return false if not found
+                    return false;
+                }
+            });
+        }
+        else {
+            return false;
+        }
+
+        //return false in an error occurs
+    } catch (err) {
+        return false;
+    }
+}
+
+    async function getChannels(accountID, groupID){
+        try {
+            channels = [];
+
+                sql.connect(sqlConfig.returnServerConfig()).then(async function () {
+                    const query = `SELECT ChannelID from Channels WHERE GroupID = ${groupID}`;
+    
+    
+                    const result = await sql.query(query);
+    
+                    if (result.rowsAffected > 0) {
+                        console.log("Channel in grp in db")
+                        totalChannels = result.recordsets;
+
+                        for(i=0;i<result.rowsAffected;i++){
+                            console.log(totalChannels[i]);
+                        }
+                        
+                    }
+                    else {
+                        // //return false if not found
+                        return null;
+                    }
+                });
+            
+    
+            //return false in an error occurs
+        } catch (err) {
+            return null;
+        }
+    }
+
 module.exports = {
     generateChatID,
     getMessageHistory,
@@ -160,5 +263,7 @@ module.exports = {
     formatDate,
     isValidChatID,
     isValidChannelID,
-    hasAccessToChannel
+    hasAccessToChannel,
+    isValidGroupID,
+    getChannels
 };

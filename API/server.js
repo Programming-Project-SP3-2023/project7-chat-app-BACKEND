@@ -32,7 +32,7 @@ const peerServer = ExpressPeerServer(server, {
     path: "/myapp",
 });
 
-app.use("/peerjs", peerServer);
+//app.use("/peerjs", peerServer);
 
 socketHandler.initialiseSockets(server, frontEndpoint);
 
