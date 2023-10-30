@@ -2,10 +2,10 @@ const ioSvr = require("socket.io");
 const chatData = require('./chatData');
 const friendshipController = require('../controllers/friendshipController')
 
-function initialiseSockets(server) {
+function initialiseSockets(server, frontEndpoint) {
     const io = ioSvr(server, {
         cors: { //cross orgin scripting
-            origin: ("http://localhost:3000"), //origin set to whatever front end URL is - this is **mandatory**
+            origin: (frontEndpoint), //origin set to whatever front end URL is - this is **mandatory**
         }
     });
 
@@ -21,10 +21,23 @@ function initialiseSockets(server) {
                 socket.emit("connectionResponse", {
                     "response": "OK"
                 });
-                socket.broadcast.emit("userConnected", {
-                    userID: socket.accountID,
-                    username: socket.username,
-                });
+                console.log("Connected with " + socket.accountID + " " + socket.username);
+                for (let [accountID, globalSocket] of io.of("/").sockets) {
+                    console.log(socket.accountID + " and " + globalSocket.accountID)
+                    if (globalSocket.accountID) {
+                        friendshipController.isActiveFriend(socket.accountID, globalSocket.accountID).then((isFriend) => {
+                            if (isFriend) {
+                                console.log(socket.accountID + " and " + globalSocket.accountID + " Are friends!")
+                                if (globalSocket.accountID != socket.accountID) {
+                                    socket.to(globalSocket.id).emit("userConnected", {
+                                        userID: socket.accountID,
+                                        username: socket.username,
+                                    });
+                                }
+                            }
+                        });
+                    }
+                }
             }
             else {
                 socket.emit("error", {
@@ -34,21 +47,35 @@ function initialiseSockets(server) {
 
         });
 
-        socket.on("getOnlineFriends", () => {
+        socket.on("getOnlineFriends", async () => {
             //this notifies the socket of all friends currently online
             const friends = [];
+            const friendshipPromises = [];
             //grab all connections as globalsocket
             for (let [accountID, globalSocket] of io.of("/").sockets) {
                 //add only valid friendships to the array
                 console.log(socket.accountID + " and " + globalSocket.accountID)
-                if (friendshipController.isActiveFriend(socket.accountID, globalSocket.accountID)) {
-                    if (globalSocket.accountID != socket.accountID) {
-                        friends.push({
-                            //what data does front end need here? just sending this for now
-                            accountID: globalSocket.accountID
-                        });
-                    }
+                if (globalSocket.accountID) {
+                    console.log("Checking friends for getonline friends");
+                    const friendshipPromise = friendshipController.isActiveFriend(socket.accountID, globalSocket.accountID).then((isFriend) => {
+                        console.log(isFriend);
+                        if (isFriend) {
+                            console.log("was true, running")
+                            if (globalSocket.accountID != socket.accountID) {
+                                console.log("socket not me, running")
+
+                                friends.push(globalSocket.accountID);
+                                
+                            }
+                        }
+                    });
+                    friendshipPromises.push(friendshipPromise);
                 }
+            }
+            await Promise.all(friendshipPromises);
+            console.log("emitting friends: ");
+            for(i=0; i<friends.length; i++){
+                console.log(friends[i]);
             }
             socket.emit("onlineFriends", friends);
         })
@@ -58,27 +85,50 @@ function initialiseSockets(server) {
         //connect with chatID (should have from friendships)
         socket.on("connectChat", ({ chatID }) => {
             //join chat if not already joined
+            console.log("checking chatid" + chatID);
             if (!socket.rooms.has(chatID)) {
-                chatData.isValidChatID(chatID).then((isValidID) => {
-                    if (isValidID) {
-                        console.log("socket not already in room, joining room");
-                        socket.join(chatID);
-                    }
-                    else {
-                        socket.emit("error", {
-                            "error": "ChatID not valid"
-                        });
-                    }
+                isValidID = chatData.isValidChatID(chatID, socket.accountID)
+                console.log("we're in the isvalid method now vaid is " + isValidID)
+                if (isValidID) {
+                    console.log("socket not already in room, joining room");
+                    socket.join(chatID);
+                }
+                else {
+                    socket.emit("error", {
+                        "error": "ChatID not valid"
+                    });
+                }
+            }
+            if (socket.rooms.has(chatID)) {
+                socket.emit("connectChatResponse", {
+                    "response": "OK"
                 });
             }
-            else {
-                socket.emit("error", {
-                    "error": "Failed to join room"
+        });
+
+        socket.on("connectChannel", ({channelID, accountID}) => {
+            if (!socket.rooms.has(channelID)) {
+                isValidID = chatData.isValidChannelID(channelID, accountID)
+                console.log("we're in the isvalid method now vaid is " + isValidID)
+                if (isValidID) {
+                    console.log("socket not already in group room, joining room");
+                    socket.join(channelID);
+                }
+                else {
+                    socket.emit("error", {
+                        "error": "ChannelID not valid"
+                    });
+                }
+            }
+            if (socket.rooms.has(channelID)) {
+                socket.emit("connectChannelResponse", {
+                    "response": "OK"
                 });
             }
         });
 
         socket.on("getMessages", ({ chatID }) => {
+            console.log("checking messages for " + chatID)
             if (socket.rooms.has(chatID)) {
                 console.log("socket in room, grabbing history");
 
@@ -115,13 +165,13 @@ function initialiseSockets(server) {
         });
 
         socket.on("sendMessage", ({ chatID, message }) => {
-            let timestamp = new Date();
+            let timestamp = new Date().getTime();
 
             if (socket.rooms.has(chatID)) {
                 socket.to(chatID).emit("messageResponse", {
                     message,
                     from: socket.username,
-                    timestamp: chatData.formatDate(timestamp),
+                    timestamp: timestamp,
                 });
                 chatData.saveMessage(message, socket.accountID, timestamp, chatID);
             }
@@ -133,10 +183,22 @@ function initialiseSockets(server) {
         });
 
         socket.on('disconnect', () => {
-            socket.broadcast.emit("userDisconnected", {
-                userID: socket.accountID,
-                username: socket.username,
-            });
+            for (let [accountID, globalSocket] of io.of("/").sockets) {
+                console.log(socket.accountID + " and " + globalSocket.accountID)
+                if (globalSocket.accountID) {
+                    friendshipController.isActiveFriend(socket.accountID, globalSocket.accountID).then((isFriend) => {
+                        if (isFriend) {
+                            if (globalSocket.accountID != socket.accountID) {
+                                socket.to(globalSocket.id).emit("userDisconnected", {
+                                    userID: socket.accountID,
+                                    username: socket.username,
+                                });
+                            }
+                        }
+                    });
+
+                }
+            }
         });
 
     });

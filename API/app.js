@@ -8,7 +8,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(function(req, res, next){
     res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+    res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT,DELETE");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
     next();
 })
@@ -20,6 +20,8 @@ const friendshipsRoutes = require('./routes/friendships');
 const avatarRoutes = require('./routes/avatar');
 const profileRoutes = require('./routes/profile');
 const groupsRoutes = require('./routes/groups');
+const verifyEmailRouter = require('./routes/verifyemail');
+
 
 
 //setup all the routes
@@ -29,6 +31,8 @@ app.use('/avatar', avatarRoutes)
 app.use('/profile', profileRoutes);
 app.use('/friendships', friendshipsRoutes);
 app.use('/groups', groupsRoutes);
+app.use('/verifyemail', verifyEmailRouter);
+
 
 
 //export the app
