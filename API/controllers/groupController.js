@@ -229,7 +229,7 @@ const createGroup = async (req, res) => {
             .input('role', sql.NVarChar(50), 'Admin')
             .query('INSERT INTO GroupMembers (AccountID, GroupID, Role) VALUES (@creatorAccountId, @groupId, @role)');
 
-        return res.status(201).json({ message: 'Group created successfully' });
+        return res.status(201).json({ message: 'Group created successfully', groupID: groupId });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Server error' });
