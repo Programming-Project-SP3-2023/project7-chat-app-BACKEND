@@ -240,7 +240,7 @@ function initialiseSockets(server, frontEndpoint) {
             }
         });
 
-        socket.on('leaveVC', (channelID) => {
+        socket.on('leaveVC', ({channelID}) => {
             if (socket.rooms.has(channelID)) {
                 socket.to(channelID).emit("userLeftVC", {
                     peerID: socket.accountID
@@ -253,7 +253,7 @@ function initialiseSockets(server, frontEndpoint) {
             }
         });
 
-        socket.on('switchVC', (channelID, newChannelID) => {
+        socket.on('switchVC', ({channelID, newChannelID}) => {
             if (socket.rooms.has(channelID)) {
                 isValidID = chatData.isValidChannelID(newChannelID)
                 if (isValidID) {
