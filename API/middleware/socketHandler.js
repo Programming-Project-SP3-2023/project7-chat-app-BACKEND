@@ -11,31 +11,32 @@ function initialiseSockets(server, frontEndpoint) {
 
     //this remains active for every connection, all the time.
     io.on("connection", (socket) => {
-        console.log("Connection established. Awaiting username.");
+        // console.log("Connection established. Awaiting username.");
 
-        socket.on("connectSocket", ({ accountID, username }) => {
+        socket.on("connectSocket", (accountID, username) => {
 
             socket.accountID = accountID;
             socket.username = username;
+            
             if (socket.accountID && socket.username) {
                 socket.emit("connectionResponse", {
                     "response": "OK"
                 });
-                console.log("Connected with " + socket.accountID + " " + socket.username);
+                // console.log("Connected with " + socket.accountID + " " + socket.username);
                 for (let [accountID, globalSocket] of io.of("/").sockets) {
-                    console.log(socket.accountID + " and " + globalSocket.accountID)
+                    // console.log(socket.accountID + " and " + globalSocket.accountID)
                     if (globalSocket.accountID) {
-                        friendshipController.isActiveFriend(socket.accountID, globalSocket.accountID).then((isFriend) => {
-                            if (isFriend) {
-                                console.log(socket.accountID + " and " + globalSocket.accountID + " Are friends!")
+                        // friendshipController.isActiveFriend(socket.accountID, globalSocket.accountID).then((isFriend) => {
+                        //     if (isFriend) {
+                        //         console.log(socket.accountID + " and " + globalSocket.accountID + " Are friends!")
                                 if (globalSocket.accountID != socket.accountID) {
                                     socket.to(globalSocket.id).emit("userConnected", {
                                         userID: socket.accountID,
                                         username: socket.username,
                                     });
                                 }
-                            }
-                        });
+                        //     }
+                        // });
                     }
                 }
             }
@@ -205,8 +206,9 @@ function initialiseSockets(server, frontEndpoint) {
 
         //VOIP Channels
 
-        socket.on('joinVC', (channelID) => {
-            console.log(socket.rooms);
+        socket.on('joinVC', (channelID, peerId) => {
+            // console.log(socket.rooms);
+            // console.log(socket.accountID);
             // console.log(channelID);
             // //checking if socket is already in room.
             if (!socket.rooms.has(channelID)) {
@@ -222,7 +224,7 @@ function initialiseSockets(server, frontEndpoint) {
                         //     "response": "joined channel"
                         // });
                         //announce to all members of voice chat of the user joining and ask them to connect
-                        socket.to(channelID).emit('userJoinVC', 'hi');
+                        socket.to(channelID).emit('userJoinVC', socket.accountID);
             //         }
             //     }
             //     else {

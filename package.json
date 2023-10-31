@@ -30,7 +30,8 @@
     "mssql": "^10.0.1",
     "peer": "^1.0.1",
     "socket.io": "^4.7.2",
-    "socket.io-redis": "^6.0.1"
+    "socket.io-redis": "^6.0.1",
+    "webrtc-adapter": "^8.2.3"
   },
   "devDependencies": {
     "jest": "^29.7.0"

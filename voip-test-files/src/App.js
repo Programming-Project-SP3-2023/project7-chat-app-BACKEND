@@ -1,17 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Peer from 'peerjs';
 import { io } from 'socket.io-client';
+import webRTCAdapter_import from "webrtc-adapter"
+
 
 function App() {
-  // const io = require('socket.io');
+  // const io = require('socket.io')+;
   //connect to socket server
   const socket = io('http://localhost:4000', { autoConnect: false });
 
   socket.connect() //you should receive a connected message with 'awaiting username'
 
-  const accountID = Math.floor(Math.random() * 10);
   const username = "skoot";
-  socket.emit("connectSocket", {accountID, username}); //this should return an OK response to the following listener:
 
   socket.on("connectionResponse", (connectionResponse) => {
     console.log(connectionResponse);
@@ -24,6 +24,7 @@ function App() {
 
     //will receive a peerID whenever someone joins a channel you are in
     //from here you can call the peerID to join them to the VC
+    call(peerID);
   });
 
   socket.on("error", () => {
@@ -37,25 +38,21 @@ function App() {
   const remoteAudioRef = useRef(null);
   //current user
   const peerInstance = useRef(null);
-  const peer = new Peer();
 
   // join a VC
-  const joinVC = (ChannelID) => {
+  const joinVC = (ChannelID, peerId) => {
     console.log(ChannelID);
     //joins you to the VC, server will check if you have access and will throw error if it fails
     socket.emit("joinVC", ChannelID);
   }
 
   useEffect(() => {
-    // const peerOptions = {
-    //     host: "echo.matthewrosin.com",
-    //     port: 4000,
-    //     path: "/myapp"
-    // }
+    const peer = new Peer();
     
-
     peer.on('open', (id) => {
-      setPeerId(accountID)
+      setPeerId(id);
+      console.log("peer ID: "+ id);
+
     });
 
     //listen for peers that are calling the user
@@ -86,7 +83,9 @@ function App() {
     setRemotePeers((prevPeers) => [...prevPeers, remotePeerId]);
 
     getUserMedia({ video: false, audio: true }, (mediaStream) => {
+      console.log("test");
       const call = peerInstance.current.call(remotePeerId, mediaStream)
+      console.log("test2");
 
       call.on('stream', (remoteStream) => {
         remoteAudioRef.current.srcObject = remoteStream
@@ -96,10 +95,12 @@ function App() {
     });
   }
 
+  socket.emit("connectSocket", peerId, username); //this should return an OK response to the following listener:
+
   //display peer ID + remote peer ID field and call button
   return (
     <div className="App">
-      <h1>Current user id is {accountID}</h1>
+      <h1>Current user id is {peerId}</h1>
 
       <button onClick={() => joinVC(3)}>Join Room 1</button>
       
