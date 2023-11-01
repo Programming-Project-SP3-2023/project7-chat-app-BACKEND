@@ -203,6 +203,10 @@ function initialiseSockets(server, frontEndpoint) {
                 socket.connectedGroupID = groupID;
 
                 channels = chatData.getChannels(socket.accountID, socket.connectedGroupID);
+                socket.emit("availableChannels", {
+                    "channels": channels
+                });
+
 
 
                 socket.on("connectChannel", ({ channelID, accountID }) => {
@@ -225,6 +229,65 @@ function initialiseSockets(server, frontEndpoint) {
                         });
                     }
                 });
+
+
+                socket.on("getChannelMessages", ({ channelID }) => {
+                    console.log("checking messages for " + channelID)
+                    if (socket.rooms.has(channelID)) {
+                        console.log("socket in room, grabbing history");
+        
+                        //grab top 10 message history for this chat
+                        chatData.getMessageHistory(channelID, 10).then(messages => {
+                            console.log(messages);
+                            socket.emit("messageHistory", messages);
+                        });
+        
+                    }
+                    else {
+                        socket.emit("error", {
+                            "error": "Fail - Socket is not connected to the chat specified."
+                        });
+                    }
+                });
+                //request top X messages from database
+                socket.on("moreChannelMessages", ({ channelID, num }) => {
+                    if (socket.rooms.has(channelID)) {
+                        console.log("socket in room, grabbing history");
+        
+                        //grab top 10 message history for this chat
+                        chatData.getMessageHistory(channelID, num).then(messages => {
+                            console.log(messages);
+                            socket.emit("messageHistory", messages);
+                        });
+        
+                    }
+                    else {
+                        socket.emit("error", {
+                            "error": "Fail - Socket is not connected to the chat specified."
+                        });
+                    }
+                });
+        
+                socket.on("sendChannelMessage", ({ channelID, message }) => {
+                    let timestamp = new Date().getTime();
+        
+                    if (socket.rooms.has(channelID)) {
+                        socket.to(channelID).emit("messageResponse", {
+                            message,
+                            from: socket.username,
+                            timestamp: timestamp,
+                        });
+                        chatData.saveMessage(message, socket.accountID, timestamp, channelID);
+                    }
+                    else {
+                        socket.emit("error", {
+                            "error": "Fail - Socket is not connected to the chat specified."
+                        });
+                    }
+                });
+
+
+
 
 
 
