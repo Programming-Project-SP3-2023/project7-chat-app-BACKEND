@@ -10,7 +10,7 @@ const { groupInfo, addMember, removeMember, createGroup, deleteGroup, currentGro
 router.get('/current-groups', authenticateToken, currentGroups);
 router.get('/:groupId', groupInfo);
 router.post('/add-member', authenticateToken, addMember);
-router.delete('/remove-member', authenticateToken, removeMember);
+router.post('/remove-member', authenticateToken, removeMember);
 router.post('/create', authenticateToken, createGroup);
 router.delete('/delete/:groupId', authenticateToken, deleteGroup);
 

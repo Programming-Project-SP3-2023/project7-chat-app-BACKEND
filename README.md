@@ -270,7 +270,7 @@ Headers: {
 
 <!-- Remove a member -->
 ### Delete Member
-Delete request to:
+Post request to:
 http://localhost:4000/groups/remove-member
 ### Example Input
 Headers: {
