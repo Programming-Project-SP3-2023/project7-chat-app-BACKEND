@@ -193,7 +193,7 @@ const deleteGroup = async (req, res) => {
         .status(403)
         .json({ message: "You do not have permission to delete this group" });
     }
-    //Delete group and related records in groupmembers
+    //delete group and related records in groupmembers
     const deleteGroupQuery = `
             DELETE FROM Groups WHERE GroupID = @groupId;
             DELETE FROM GroupMembers WHERE GroupID = @groupId;
@@ -213,7 +213,7 @@ const deleteGroup = async (req, res) => {
 const createGroup = async (req, res) => {
   try {
     // Get group details from the request body
-    const { groupName } = req.body;
+    const { groupName, groupAvatar } = req.body;
     if (!groupName) {
       return res.status(400).json({ message: "Group name is required" });
     }
@@ -221,16 +221,27 @@ const createGroup = async (req, res) => {
     // Get the creator's AccountID from the authenticated token
     const creatorAccountId = req.user.AccountID;
 
-    // Create a new database connection pool
+    // db connect
     const pool = await sql.connect(sqlConfig.returnServerConfig());
 
-    // Insert a new group into the Groups table
-    const groupResult = await pool
-      .request()
-      .input("groupName", sql.NVarChar(50), groupName)
-      .query(
-        "INSERT INTO Groups (GroupName) VALUES (@groupName); SELECT SCOPE_IDENTITY() AS NewGroupID"
-      );
+     const query = `
+     INSERT INTO Groups (GroupName, GroupAvatar) 
+     VALUES (@groupName, @groupAvatar); 
+     SELECT SCOPE_IDENTITY() AS NewGroupID
+   `;
+
+   const request = pool
+     .request()
+     .input("groupName", sql.NVarChar(50), groupName);
+
+   // add groupAvatar input if it's provided
+   if (groupAvatar) {
+     request.input("groupAvatar", sql.NVarChar, groupAvatar);
+   } else{
+    request.input("groupAvatar", sql.NVarChar, groupAvatar);
+   }
+
+   const groupResult = await request.query(query);
 
     const groupId = groupResult.recordset[0].NewGroupID;
 
