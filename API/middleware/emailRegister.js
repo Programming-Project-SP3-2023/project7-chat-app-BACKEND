@@ -16,10 +16,30 @@ const transporter = nodemailer.createTransport({
 
 function sendVerificationEmail(email, emailToken) {
     const mailOptions = {
-        from: 'echovoicechat@gmail.com', // Your email address
-        to: email, // Recipient's email address
-        subject: 'Email Verification',
-        text: `Click the following link to verify your email: https://main.d11izrd17dq8t7.amplifyapp.com/verifyemail?emailToken=${emailToken}`
+        from: 'echovoicechat@gmail.com',
+        to: email,
+        subject: 'Echo Email Verification',
+        html: `
+            <html>
+                <body style="text-align: center;">
+                    <img src="cid:echo-logo" alt="Echo Logo" width="100" />
+                    <br>
+                    <h1 style="font-size:24px;">Echo Email Verification</h1>
+                    <p>Please click the link below to verify your email:</p>
+                    <a href="https://main.d11izrd17dq8t7.amplifyapp.com/verifyemail?emailToken=${emailToken}" target="_blank">
+                        <button style="font-size: 16px; background-color: #456B9A; color: #FFF; padding: 10px 20px; border: none; cursor: pointer;">Verify Email</button>
+                    </a>
+                    <br>
+                </body>
+            </html>
+        `,
+        attachments: [
+            {
+                filename: 'Echo_Logo.png',
+                path: '../assets/Echo_Logo.png', 
+                cid: 'echo-logo' 
+            }
+        ]
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
