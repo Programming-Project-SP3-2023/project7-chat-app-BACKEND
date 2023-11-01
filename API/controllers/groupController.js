@@ -38,8 +38,6 @@ const currentGroups = async (req, res) => {
 };
 
 
-
-
 //Add a user to a group via email
 const addMember = async(req, res) =>{
     try{
@@ -148,6 +146,7 @@ const groupInfo = async (req, res) => {
             groupName: groupInfoResult.recordset[0].GroupName,
             groupAvatar: groupInfoResult.recordset[0].GroupAvatar,
             members: groupInfoResult.recordset.map((row) => row.AccountID),
+            
         };
         return res.status(200).json(groupInfo);
     } catch (error) {
