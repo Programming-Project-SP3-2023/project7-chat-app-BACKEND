@@ -183,7 +183,7 @@ function initialiseSockets(server, frontEndpoint) {
 
         //group sockets
 
-        socket.on("connectGroup", ({groupID}) => {
+        socket.on("connectGroup", async ({groupID}) => {
 
             //checks two things:
             //1. is this a real group ID? and
@@ -193,7 +193,13 @@ function initialiseSockets(server, frontEndpoint) {
             //groupID = 3;
             console.log(groupID)
 
-            if(chatData.isValidGroupID(groupID, socket.accountID)){
+            const isValidGroupID = await chatData.isValidGroupID(groupID, socket.accountID);
+
+            if(isValidGroupID){
+
+                socket.emit("connectGroupResponse", {
+                    "response": "Joined successfully"
+                })
 
                 //checks if group is already connected, and disconnects it if so
                 if(socket.connectedGroupID){
@@ -202,33 +208,31 @@ function initialiseSockets(server, frontEndpoint) {
 
                 socket.connectedGroupID = groupID;
 
-                channels = chatData.getChannels(socket.accountID, socket.connectedGroupID);
-                socket.emit("availableChannels", {
-                    "channels": channels
-                });
 
-
-
-                socket.on("connectChannel", ({ channelID, accountID }) => {
+                socket.on("connectChannel", async ({ channelID }) => {
                     if (!socket.rooms.has(channelID)) {
-                        isValidID = chatData.isValidChannelID(channelID, socket.connectedGroupID, accountID)
-                        console.log("we're in the isvalid method now vaid is " + isValidID)
-                        if (isValidID) {
-                            console.log("socket not already in group room, joining room");
-                            socket.join(channelID);
-                        }
-                        else {
-                            socket.emit("error", {
-                                "error": "Channel not valid or user does not have permission to view."
+                        try {
+                            const validChannel = await chatData.isValidChannelID(channelID, socket.connectedGroupID, socket.accountID);
+                            console.log(validChannel)
+                            if (validChannel) {
+                                console.log("socket not already in group room, joining room");
+                                socket.join(channelID);
+                                socket.emit("connectChannelResponse", {
+                                    "response": "OK"
+                                });
+                            } else {
+                                socket.emit("error", {
+                                    "error": "Channel not valid or user does not have permission to view."
+                                });
+                            }
+                        } catch (err) {
+                            socket.emit("connectChannelResponse", {
+                                "response": "Error joining channel"
                             });
                         }
                     }
-                    if (socket.rooms.has(channelID)) {
-                        socket.emit("connectChannelResponse", {
-                            "response": "OK"
-                        });
-                    }
                 });
+                
 
 
                 socket.on("getChannelMessages", ({ channelID }) => {
@@ -255,9 +259,9 @@ function initialiseSockets(server, frontEndpoint) {
                         console.log("socket in room, grabbing history");
         
                         //grab top 10 message history for this chat
-                        chatData.getMessageHistory(channelID, num).then(messages => {
+                        chatData.getChannelMessageHistory(channelID, num).then(messages => {
                             console.log(messages);
-                            socket.emit("messageHistory", messages);
+                            socket.emit("channelMessageHistory", messages);
                         });
         
                     }
@@ -272,16 +276,16 @@ function initialiseSockets(server, frontEndpoint) {
                     let timestamp = new Date().getTime();
         
                     if (socket.rooms.has(channelID)) {
-                        socket.to(channelID).emit("messageResponse", {
+                        socket.to(channelID).emit("channelMessageResponse", {
                             message,
                             from: socket.username,
                             timestamp: timestamp,
                         });
-                        chatData.saveMessage(message, socket.accountID, timestamp, channelID);
+                        chatData.saveChannelMessage(message, socket.accountID, timestamp, channelID);
                     }
                     else {
                         socket.emit("error", {
-                            "error": "Fail - Socket is not connected to the chat specified."
+                            "error": "Fail - Socket is not connected to the channel specified."
                         });
                     }
                 });
@@ -292,6 +296,11 @@ function initialiseSockets(server, frontEndpoint) {
 
 
 
+            }
+            else{
+                socket.emit("error", {
+                    "error": "Invalid Group ID or permissions insufficient"
+                })
             }
 
 
@@ -301,85 +310,6 @@ function initialiseSockets(server, frontEndpoint) {
 
         socket.on("disconnectGroup", () => {
             socket.connectedGroupID = null;
-        });
-
-        //VOIP Channels
-
-        socket.on('joinVC', ({channelID}) => {
-            //checking if socket is already in room.
-            if (!socket.rooms.has(channelID)) {
-                isValidID = chatData.isValidChannelID(channelID)
-                if (isValidID) {
-                    hasAccess = chatData.hasAccessToChannel(channelID, socket.accountID);
-                    if (hasAccess) {
-                        console.log("socket not already in VC room, joining room");
-                        socket.join(channelID);
-                        socket.emit("updateVCStatus", {
-                            "response": "joined channel"
-                        });
-                        //announce to all members of voice chat of the user joining and ask them to connect
-                        socket.to(channelID).emit("userJoinVC", {
-                            peerID: socket.accountID
-                        });
-                    }
-                }
-                else {
-                    socket.emit("error", {
-                        "error": "channelID not valid"
-                    });
-                }
-            }
-            else {
-                socket.emit("error", {
-                    "error": "VC already connected."
-                });
-            }
-        });
-
-        socket.on('leaveVC', ({channelID}) => {
-            if (socket.rooms.has(channelID)) {
-                socket.to(channelID).emit("userLeftVC", {
-                    peerID: socket.accountID
-                });
-                socket.leave(channelID);
-                socket.emit("updateVCStatus", {
-                    "response": "left channel"
-                });
-
-            }
-        });
-
-        socket.on('switchVC', ({channelID, newChannelID}) => {
-            if (socket.rooms.has(channelID)) {
-                isValidID = chatData.isValidChannelID(newChannelID)
-                if (isValidID) {
-                    hasAccess = chatData.hasAccessToChannel(channelID, socket.accountID);
-                    if (hasAccess) {
-                        socket.leave(channelID);
-                        socket.emit("updateVCStatus", {
-                            "response": "left channel"
-                        });
-                        socket.join(newChannelID);
-                        socket.emit("updateVCStatus", {
-                            "response": "joined channel"
-                        });
-                        //announce to all members of voice chat of the user joining and ask them to connect
-                        socket.to(newChannelID).emit("userJoinVC", {
-                            peerID: socket.accountID
-                        });
-                    }
-                }
-                else {
-                    socket.emit("error", {
-                        "error": "channelID not valid"
-                    });
-                }
-            }
-            else {
-                socket.emit("error", {
-                    "error": "VC not connected."
-                });
-            }
         });
 
 
