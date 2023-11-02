@@ -241,7 +241,7 @@ function initialiseSockets(server, frontEndpoint) {
                         console.log("socket in room, grabbing history");
         
                         //grab top 10 message history for this chat
-                        chatData.getMessageHistory(channelID, 10).then(messages => {
+                        chatData.getChannelMessageHistory(channelID, 10).then(messages => {
                             console.log(messages);
                             socket.emit("messageHistory", messages);
                         });
