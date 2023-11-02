@@ -17,6 +17,7 @@ function initialiseSockets(server, frontEndpoint) {
 
             socket.accountID = accountID;
             socket.username = username;
+            socket.connectedGroupID = null;
             if (socket.accountID && socket.username) {
                 socket.emit("connectionResponse", {
                     "response": "OK"
@@ -65,7 +66,7 @@ function initialiseSockets(server, frontEndpoint) {
                                 console.log("socket not me, running")
 
                                 friends.push(globalSocket.accountID);
-                                
+
                             }
                         }
                     });
@@ -74,7 +75,7 @@ function initialiseSockets(server, frontEndpoint) {
             }
             await Promise.all(friendshipPromises);
             console.log("emitting friends: ");
-            for(i=0; i<friends.length; i++){
+            for (i = 0; i < friends.length; i++) {
                 console.log(friends[i]);
             }
             socket.emit("onlineFriends", friends);
@@ -101,27 +102,6 @@ function initialiseSockets(server, frontEndpoint) {
             }
             if (socket.rooms.has(chatID)) {
                 socket.emit("connectChatResponse", {
-                    "response": "OK"
-                });
-            }
-        });
-
-        socket.on("connectChannel", ({channelID, accountID}) => {
-            if (!socket.rooms.has(channelID)) {
-                isValidID = chatData.isValidChannelID(channelID, accountID)
-                console.log("we're in the isvalid method now vaid is " + isValidID)
-                if (isValidID) {
-                    console.log("socket not already in group room, joining room");
-                    socket.join(channelID);
-                }
-                else {
-                    socket.emit("error", {
-                        "error": "ChannelID not valid"
-                    });
-                }
-            }
-            if (socket.rooms.has(channelID)) {
-                socket.emit("connectChannelResponse", {
                     "response": "OK"
                 });
             }
@@ -200,6 +180,139 @@ function initialiseSockets(server, frontEndpoint) {
                 }
             }
         });
+
+        //group sockets
+
+        socket.on("connectGroup", async ({groupID}) => {
+
+            //checks two things:
+            //1. is this a real group ID? and
+            //2. is this account a member of the group?
+
+            //testing!!!!!!!
+            //groupID = 3;
+            console.log(groupID)
+
+            const isValidGroupID = await chatData.isValidGroupID(groupID, socket.accountID);
+
+            if(isValidGroupID){
+
+                socket.emit("connectGroupResponse", {
+                    "response": "Joined successfully"
+                })
+
+                //checks if group is already connected, and disconnects it if so
+                if(socket.connectedGroupID){
+                    socket.emit("disconnectGroup");
+                }
+
+                socket.connectedGroupID = groupID;
+
+
+                socket.on("connectChannel", async ({ channelID }) => {
+                    if (!socket.rooms.has(channelID)) {
+                        try {
+                            const validChannel = await chatData.isValidChannelID(channelID, socket.connectedGroupID, socket.accountID);
+                            console.log(validChannel)
+                            if (validChannel) {
+                                console.log("socket not already in group room, joining room");
+                                socket.join(channelID);
+                                socket.emit("connectChannelResponse", {
+                                    "response": "OK"
+                                });
+                            } else {
+                                socket.emit("error", {
+                                    "error": "Channel not valid or user does not have permission to view."
+                                });
+                            }
+                        } catch (err) {
+                            socket.emit("connectChannelResponse", {
+                                "response": "Error joining channel"
+                            });
+                        }
+                    }
+                });
+                
+
+
+                socket.on("getChannelMessages", ({ channelID }) => {
+                    console.log("checking messages for " + channelID)
+                    if (socket.rooms.has(channelID)) {
+                        console.log("socket in room, grabbing history");
+        
+                        //grab top 10 message history for this chat
+                        chatData.getChannelMessageHistory(channelID, 10).then(messages => {
+                            console.log(messages);
+                            socket.emit("messageHistory", messages);
+                        });
+        
+                    }
+                    else {
+                        socket.emit("error", {
+                            "error": "Fail - Socket is not connected to the chat specified."
+                        });
+                    }
+                });
+                //request top X messages from database
+                socket.on("moreChannelMessages", ({ channelID, num }) => {
+                    if (socket.rooms.has(channelID)) {
+                        console.log("socket in room, grabbing history");
+        
+                        //grab top 10 message history for this chat
+                        chatData.getChannelMessageHistory(channelID, num).then(messages => {
+                            console.log(messages);
+                            socket.emit("channelMessageHistory", messages);
+                        });
+        
+                    }
+                    else {
+                        socket.emit("error", {
+                            "error": "Fail - Socket is not connected to the chat specified."
+                        });
+                    }
+                });
+        
+                socket.on("sendChannelMessage", ({ channelID, message }) => {
+                    let timestamp = new Date().getTime();
+        
+                    if (socket.rooms.has(channelID)) {
+                        socket.to(channelID).emit("channelMessageResponse", {
+                            message,
+                            from: socket.username,
+                            timestamp: timestamp,
+                        });
+                        chatData.saveChannelMessage(message, socket.accountID, timestamp, channelID);
+                    }
+                    else {
+                        socket.emit("error", {
+                            "error": "Fail - Socket is not connected to the channel specified."
+                        });
+                    }
+                });
+
+
+
+
+
+
+
+            }
+            else{
+                socket.emit("error", {
+                    "error": "Invalid Group ID or permissions insufficient"
+                })
+            }
+
+
+
+
+        });
+
+        socket.on("disconnectGroup", () => {
+            socket.connectedGroupID = null;
+        });
+
+
 
     });
 

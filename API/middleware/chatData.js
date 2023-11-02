@@ -73,60 +73,176 @@ async function isValidChatID(chatID, accountID) {
 
             const result = await sql.query(query);
 
-            if (result.rowsAffected > 0) {
-                console.log("ChatID in db")
-                return true;
+                if (result.rowsAffected > 0) {
+                    console.log("ChatID in db")
+                    return true;
+                }
+                else {
+                    // //return false if not found
+                    return false;
+                }
+            });
+        }
+        else {
+            return false;
+        }
+
+        //return false in an error occurs
+    } catch (err) {
+        return false;
+    }
+}
+
+
+
+async function hasAccessToChannel(channelID, accountID){
+    try {
+        if (channelID) {
+            sql.connect(sqlConfig.returnServerConfig()).then(async function () {
+                const query = `SELECT MemberID from ChannelMembers WHERE ChannelID = ${channelID} AND MemberID = ${accountID}`;
+
+
+                const result = await sql.query(query);
+
+                if (result.rowsAffected > 0) {
+                    return true;
+                }
+                else {
+                    // //return false if not found
+                    return false;
+                }
+            });
+        }
+        else {
+            return false;
+        }
+
+        //return false in an error occurs
+    } catch (err) {
+        return false;
+    }
+}
+
+
+
+
+//group functions
+
+async function isValidGroupID(groupID, accountID) {
+    try {
+        if (!groupID) {
+            return false;
+        }
+
+        const connection = await sql.connect(sqlConfig.returnServerConfig());
+        const query = `SELECT GroupID from Groups WHERE GroupID = ${groupID}`;
+        const result = await connection.query(query);
+
+        if (result.rowsAffected > 0) {
+            console.log("groupID in db");
+            const inGroup = await isInGroup(groupID, accountID);
+            return inGroup;
+        } else {
+            return false;
+        }
+    } catch (err) {
+        return false;
+    }
+}
+
+async function isInGroup(groupID, accountID) {
+    try {
+        if (!groupID) {
+            return false;
+        }
+
+        const connection = await sql.connect(sqlConfig.returnServerConfig());
+        const query = `SELECT MemberID from GroupMembers WHERE GroupID = ${groupID} AND AccountID = ${accountID}`;
+        const result = await connection.query(query);
+
+        if (result.rowsAffected > 0) {
+            console.log("account is a member of the group in db");
+            return true;
+        } else {
+            return false;
+        }
+    } catch (err) {
+        return false;
+    }
+}
+
+
+async function isValidChannelID(channelID, groupID, accountID) {
+    try {
+        console.log(channelID, accountID, groupID)
+        if (!channelID) {
+            return false;
+        }
+
+        const connection = await sql.connect(sqlConfig.returnServerConfig());
+        const query = `SELECT Channels.ChannelID FROM Channels 
+        INNER JOIN ChannelMembers ON Channels.ChannelID = ChannelMembers.ChannelID INNER JOIN GroupMembers ON ChannelMembers.MemberID = GroupMembers.MemberID 
+        WHERE Channels.GroupID = ${groupID} AND GroupMembers.AccountID = ${accountID} AND Channels.ChannelID = ${channelID}
+        OR Channels.Visibility = 'Public'`;
+        const result = await connection.query(query);
+
+        console.log(result.rowsAffected);
+
+        if (result.rowsAffected > 0) {
+            console.log("Channel in db");
+            return true;
+        } else {
+            return false;
+        }
+    } catch (err) {
+        console.log(err)
+        return false;
+    }
+}
+
+async function saveChannelMessage(message, accountID, timestamp, currentChatID) {
+    try {
+        console.log(timestamp);
+        sql.connect(sqlConfig.returnServerConfig()).then(async function () {
+
+            //if there isn't an existing friend request, add friendship into the database as pending
+            result = await sql.query`insert into channelMessages (ChannelID, MessageBody, SenderID, TimeSent)
+            Values (${currentChatID}, ${message}, ${accountID}, ${timestamp})`
+            if (result.recordsets.rowsAffected > 0) {
+                return Promise.resolve(true)
             }
             else {
-                // //return false if not found
-                return false;
+                return Promise.resolve(false)
             }
-        });
-    }
-    else{
-        return false;
-    }
 
-        //return false in an error occurs
-    } catch (err) {
-        return false;
+        })
+    }
+    catch (err) {
+        console.log(err.message);
+        return Promise.resolve(false);
     }
 }
 
-async function isValidChannelID(channelID, accountID) {
+async function getChannelMessageHistory(channelID, num) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let messages = null;
+            sql.connect(sqlConfig.returnServerConfig()).then(async function () {
 
-    try {
-        console.log("checking channel ID is valid now with channel " + channelID + " " + accountID);
-        if(channelID){
-        // sql.connect(sqlConfig.returnServerConfig()).then(async function () {
-        //     const query = `SELECT ChannelID from Channels WHERE Channel = ${channelID}`;
+                const result = await sql.query('SELECT TOP ' + num + ' * FROM ChannelMessages WHERE ChannelID = \'' + channelID + '\' ORDER BY TimeSent DESC');
+                messages = result.recordsets;
+                console.log(messages);
+                resolve(messages);
 
+            });
+        }
+        catch (err) {
+            console.log(err.message);
+            reject(err);
+        }
+    });
 
-        //     const result = await sql.query(query);
-
-        //     if (result.rowsAffected > 0) {
-        //         console.log("ChatID in db")
-        //         return true;
-        //     }
-        //     else {
-        //         // //return false if not found
-        //         return false;
-        //     }
-        // });
-        //we dont have a DB check yet
-        return true;
-    }
-    else{
-        return false;
-    }
-
-        //return false in an error occurs
-    } catch (err) {
-        return false;
-    }
 }
-
-
 
 module.exports = {
     generateChatID,
@@ -135,4 +251,9 @@ module.exports = {
     formatDate,
     isValidChatID,
     isValidChannelID,
+    hasAccessToChannel,
+    isValidGroupID,
+    saveChannelMessage,
+    getChannelMessageHistory
+
 };

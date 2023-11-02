@@ -79,3 +79,12 @@ CREATE TABLE [dbo].[Messages](
 	TimeSent bigint NOT NULL,
 	FOREIGN KEY (ChatID) REFERENCES Friendships(FriendshipID)
 )
+
+CREATE TABLE [dbo].[ChannelMessages](
+	ChannelMessageID int NOT NULL PRIMARY KEY IDENTITY(1,1),
+	ChannelID int NOT NULL,
+	MessageBody varchar(50),
+	SenderID int NOT NULL,
+	TimeSent bigint NOT NULL,
+	FOREIGN KEY (ChannelID) REFERENCES Channels(ChannelID)
+)

@@ -481,3 +481,32 @@ error   Listens for all errors
 
 userDisconnected    Listens for disconnection
 
+<!---------------------- SocketIO CHANNEL Messages ---------------------------------->
+
+Prerequisites are:
+
+Must have socket.connect() done
+Must have socket.connectSocket emitted.
+
+Then:
+
+join a group with socket.emit("connectGroup", {"groupID": ???})
+
+Listen for "connectGroupResponse" it should respond with "Joined Successfully" or an error msg. If joined successfully:
+
+
+Joining channels
+
+socket.emit("connectChannel", {"channelID": ???})
+
+Listen for connectChannelResponse should respond "OK" or an error
+
+Once joined a channel, you can:
+
+socket.emit:
+"sendChannelMessage" with "channelID": ??, "message": "Test Message"
+"getChannelMessages" with "channelID": ???
+"moreChannelMessages" with "channelID": ???, "num": X
+
+
+
