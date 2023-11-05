@@ -7,6 +7,7 @@ CREATE TABLE [dbo].[Accounts](
 	Avatar varchar(max),
 	IsVerified bit NOT NULL DEFAULT 0, -- Add IsVerified column
     EmailToken varchar(64), -- Add EmailToken column
+	TokenCreationDateTime datetime, -- Add Token creation date column
 	PRIMARY KEY (AccountID)
 )
 
