@@ -31,7 +31,8 @@ router.post('/', jsonParser, (req, res, next) =>{
         username: req.body.username,
         password: req.body.password,
         isVerified: false,
-        emailToken: emailToken
+        emailToken: emailToken,
+        tokenCreationDateTime: new Date()
     }
 
     // submit user to the database
@@ -60,8 +61,8 @@ router.post('/', jsonParser, (req, res, next) =>{
 
         if(result.rowsAffected == 0){
             //insert new user into the database
-            result = await sql.query`INSERT INTO Accounts (Email, DisplayName, Dob, Avatar, IsVerified, EmailToken) 
-            VALUES (${user.email}, ${user.name}, ${user.dateOfBirth}, 'NULL', ${user.isVerified}, ${user.emailToken})`
+            result = await sql.query`INSERT INTO Accounts (Email, DisplayName, Dob, Avatar, IsVerified, EmailToken, TokenCreationDateTime) 
+            VALUES (${user.email}, ${user.name}, ${user.dateOfBirth}, 'NULL', ${user.isVerified}, ${user.emailToken}, ${user.tokenCreationDateTime})`
 
             //select the accountID of the new user
             const AccountID = await sql.query`SELECT TOP 1 * FROM Accounts ORDER BY AccountID DESC`
