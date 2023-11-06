@@ -9,16 +9,13 @@ var jsonparser = bodyParser.json();
 
 //Create a channel within a grp
 router.post('/groups/:groupId/channels', authenticateToken, createChannel);
-//Delete a channel within a grp
 router.delete('/groups/:groupId/channels/:channelId', authenticateToken, removeChannel);
-//Add members to channel
 router.post('/groups/:groupId/channels/:channelId/members', authenticateToken, addMembersToChannel);
-//Remove members from a channel
 router.delete('/groups/:groupId/channels/:channelId/members/:userId', authenticateToken, removeUserFromChannel);
-//List all channels within a group
 router.get('/groups/:groupId/channels', authenticateToken, getAllChannelsForGroup);
-//get specific channel information
 router.get('/groups/:groupId/channels/:channelId', authenticateToken, getChannelInfo);
+router.put('/groups/:groupId/channels/:channelId/name', authenticateToken, updateChannelName);
+
 
 
 module.exports = router;
