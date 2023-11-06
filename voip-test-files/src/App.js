@@ -33,6 +33,7 @@ function App() {
 
   const [peerId, setPeerId] = useState('');
   const [remotePeers, setRemotePeers] = useState([]);
+  const [remoteCalls, setRemoteCalls] = useState([]);
   //other users Peer IDs
   const remoteAudioRefs = useRef({});
   const remoteAudioRef = useRef(null);
@@ -51,8 +52,6 @@ function App() {
     
     peer.on('open', (id) => {
       setPeerId(id);
-      console.log("peer ID: "+ id);
-
     });
 
     //listen for peers that are calling the user
@@ -61,13 +60,14 @@ function App() {
 
       const remotePeerId = call.peer;
       setRemotePeers((prevPeers) => [...prevPeers, remotePeerId]);
+      setRemoteCalls((prevCalls) => [...prevCalls, call]);
 
       getUserMedia({ video: false, audio: true }, (mediaStream) => {
         call.answer(mediaStream)
         call.on('stream', function(remoteStream) {
           remoteAudioRef.current.srcObject = remoteStream
           remoteAudioRef.current.play();
-          remoteAudioRefs.current[call.remotePeerId] = remoteAudioRef;
+          // remoteAudioRefs.current[call.remotePeerId] = remoteAudioRef;
         });
       });
     })
@@ -77,22 +77,33 @@ function App() {
 
   //call peers
   const call = (remotePeerId) => {
+    // createDataConnection(remotePeerId);
 
     var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 
     setRemotePeers((prevPeers) => [...prevPeers, remotePeerId]);
 
     getUserMedia({ video: false, audio: true }, (mediaStream) => {
-      console.log("test");
-      const call = peerInstance.current.call(remotePeerId, mediaStream)
-      console.log("test2");
-
+      const call = peerInstance.current.call(remotePeerId, mediaStream);
+      setRemoteCalls((prevCalls) => [...prevCalls, call]);
+      
+      console.log(remoteCalls);
       call.on('stream', (remoteStream) => {
         remoteAudioRef.current.srcObject = remoteStream
         remoteAudioRef.current.play();
-        remoteAudioRefs.current[remotePeerId] = remoteAudioRef;
+        // remoteAudioRefs.current[remotePeerId] = remoteAudioRef;
       });
     });
+  }
+
+  const closeCalls = () => {
+    console.log(remoteCalls);
+
+    for(var i=0; i<remoteCalls.length; i++){
+      remoteCalls[i].close();
+    }
+
+    remoteCalls.splice(0, remoteCalls.length);
   }
 
   socket.emit("connectSocket", peerId, username); //this should return an OK response to the following listener:
@@ -103,6 +114,8 @@ function App() {
       <h1>Current user id is {peerId}</h1>
 
       <button onClick={() => joinVC(3)}>Join Room 1</button>
+      <button onClick={() => closeCalls()}>leave Room</button>
+
       
       <div>
         <audio ref={remoteAudioRef} />
