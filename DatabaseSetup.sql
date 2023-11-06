@@ -43,14 +43,17 @@ CREATE TABLE [dbo].[GroupMembers](
     FOREIGN KEY (GroupID) REFERENCES Groups(GroupID)
 );
 
+
 /****** Channels ******/
 CREATE TABLE [dbo].[Channels](
     ChannelID int NOT NULL PRIMARY KEY,
     GroupID int NOT NULL,
+    ChannelName varchar(100) NOT NULL,
     ChannelType varchar(50) NOT NULL,
     Visibility varchar(50) NOT NULL,
     FOREIGN KEY (GroupID) REFERENCES Groups(GroupID)
 );
+
 
 /****** Channel Members ******/
 CREATE TABLE [dbo].[ChannelMembers](

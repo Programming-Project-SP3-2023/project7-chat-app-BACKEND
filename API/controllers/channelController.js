@@ -13,64 +13,21 @@ const router = express.Router();
 //Create a channel
 const createChannel = async (req, res) => {
     try {
-        const { groupName, creatorAccountId, channelType, visibility } = req.body;
+        const { groupName, creatorAccountId, channelType, visibility, channelName } = req.body;
 
-        // Check if the creator is an admin of the group
-        const isAdminQuery = `
-            SELECT 1
-            FROM GroupMembers
-            WHERE GroupID = @groupId
-            AND AccountID = @creatorAccountId
-            AND Role = 'Admin'
-        `;
-
-        const pool = await sql.connect(sqlConfig.returnServerConfig());
-        const isAdminResult = await pool
-            .request()
-            .input('groupId', sql.Int, groupId)
-            .input('creatorAccountId', sql.Int, creatorAccountId)
-            .query(isAdminQuery);
-
-        if (isAdminResult.rowsAffected[0] !== 1) {
-            return res.status(403).json({ message: 'You do not have permission to create a channel in this group' });
-        }
-
-        // Proceed with creating the channel
-        const createChannelQuery = `
-            INSERT INTO Channels (GroupID, ChannelType, Visibility)
-            VALUES (@groupId, @channelType, @visibility)
-        `;
-
-        await pool
-            .request()
-            .input('groupId', sql.Int, groupId)
-            .input('channelType', sql.VarChar(50), channelType)
-            .input('visibility', sql.VarChar(50), visibility)
-            .query(createChannelQuery);
-
-        return res.status(201).json({ message: 'Channel created successfully' });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: 'Internal Server Error' });
-    }
-};
-
-
-
-//Delete a channel
-const deleteChannel = async (req, res) => {
-    try {
-        //req should have channelId and userId
-        const { channelId, userId } = req.body;
+        const userId = req.user.AccountID;
 
         // Check if the user is an admin of the group
         const isAdminQuery = `
             SELECT 1
-            FROM GroupMembers GM
-            JOIN Channels C ON GM.GroupID = C.GroupID
-            WHERE C.ChannelID = @channelId
-            AND GM.AccountID = @userId
-            AND GM.Role = 'Admin'
+            FROM GroupMembers
+            WHERE GroupID = (
+                SELECT GroupID
+                FROM Channels
+                WHERE ChannelID = @channelId
+            )
+            AND AccountID = @userId
+            AND Role = 'Admin'
         `;
 
         const pool = await sql.connect(sqlConfig.returnServerConfig());
@@ -80,6 +37,100 @@ const deleteChannel = async (req, res) => {
             .input('userId', sql.Int, userId)
             .query(isAdminQuery);
 
+        if (isAdminResult.rowsAffected[0] !== 1) {
+            return res.status(403).json({ message: 'You do not have permission to change the channel name' });
+        }
+
+        // Proceed with creating the channel
+        const createChannelQuery = `
+            INSERT INTO Channels (GroupID, ChannelType, Visibility, ChannelName)
+            VALUES (@groupId, @channelType, @visibility, @channelName)
+        `;
+
+        await pool
+            .request()
+            .input('groupId', sql.Int, groupId)
+            .input('channelType', sql.VarChar(50), channelType)
+            .input('visibility', sql.VarChar(50), visibility)
+            .input('channelName', sql.VarChar(100), channelname)
+            .query(createChannelQuery);
+
+        return res.status(201).json({ message: 'Channel created successfully' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
+//Change channel name
+const updateChannelName = async(req, res) =>{
+    try{
+        const {channelId, newChannelName} = req.body;
+
+        //check permissions
+        const userId = req.user.AccountID;
+
+        // Check if the user is an admin of the group
+        const isAdminQuery = `
+            SELECT 1
+            FROM GroupMembers
+            WHERE GroupID = (
+                SELECT GroupID
+                FROM Channels
+                WHERE ChannelID = @channelId
+            )
+            AND AccountID = @userId
+            AND Role = 'Admin'
+        `;
+
+        const pool = await sql.connect(sqlConfig.returnServerConfig());
+        const isAdminResult = await pool
+            .request()
+            .input('channelId', sql.Int, channelId)
+            .input('userId', sql.Int, userId)
+            .query(isAdminQuery);
+
+        if (isAdminResult.rowsAffected[0] !== 1) {
+            return res.status(403).json({ message: 'You do not have permission to change the channel name' });
+        }
+        if (isAdminResult.rowsAffected[0] !== 1) {
+            return res.status(403).json({ message: 'You do not have permission to change the channel name' });
+        }
+    }
+};
+
+
+//Delete a channel
+const deleteChannel = async (req, res) => {
+    try {
+        //req should have channelId and userId
+        const { channelId,} = req.body;
+
+        const userId = req.user.AccountID;
+
+        // Check if the user is an admin of the group
+        const isAdminQuery = `
+            SELECT 1
+            FROM GroupMembers
+            WHERE GroupID = (
+                SELECT GroupID
+                FROM Channels
+                WHERE ChannelID = @channelId
+            )
+            AND AccountID = @userId
+            AND Role = 'Admin'
+        `;
+
+        const pool = await sql.connect(sqlConfig.returnServerConfig());
+        const isAdminResult = await pool
+            .request()
+            .input('channelId', sql.Int, channelId)
+            .input('userId', sql.Int, userId)
+            .query(isAdminQuery);
+
+        if (isAdminResult.rowsAffected[0] !== 1) {
+            return res.status(403).json({ message: 'You do not have permission to change the channel name' });
+        }
         if (isAdminResult.rowsAffected[0] !== 1) {
             return res.status(403).json({ message: 'You do not have permission to delete this channel' });
         }
@@ -104,24 +155,33 @@ const deleteChannel = async (req, res) => {
 //Add member to channel
 const addMember = async (req, res) => {
     try {
-        const { channelId, userId } = req.body;
+        const { channelId} = req.body;
 
-        // check if the user is an admin or a member of the group associated with the channel
-        const isMemberQuery = `
+        const userId = req.user.AccountID;
+
+        // Check if the user is an admin of the group
+        const isAdminQuery = `
             SELECT 1
-            FROM GroupMembers GM
-            JOIN Channels C ON GM.GroupID = C.GroupID
-            WHERE C.ChannelID = @channelId
-            AND GM.AccountID = @userId
+            FROM GroupMembers
+            WHERE GroupID = (
+                SELECT GroupID
+                FROM Channels
+                WHERE ChannelID = @channelId
+            )
+            AND AccountID = @userId
+            AND Role = 'Admin'
         `;
 
         const pool = await sql.connect(sqlConfig.returnServerConfig());
-        const isMemberResult = await pool
+        const isAdminResult = await pool
             .request()
             .input('channelId', sql.Int, channelId)
             .input('userId', sql.Int, userId)
-            .query(isMemberQuery);
+            .query(isAdminQuery);
 
+        if (isAdminResult.rowsAffected[0] !== 1) {
+            return res.status(403).json({ message: 'You do not have permission to change the channel name' });
+        }
         if (isMemberResult.rowsAffected[0] !== 1) {
             return res.status(403).json({ message: 'You do not have permission to add a member to this channel' });
         }
@@ -147,24 +207,33 @@ const addMember = async (req, res) => {
 
 const removeMember = async (req, res) => {
     try {
-        const { channelId, userId } = req.body; 
+        const { channelId} = req.body; 
 
-        // check if user is admin
-        const isMemberQuery = `
+        const userId = req.user.AccountID;
+
+        // Check if the user is an admin of the group
+        const isAdminQuery = `
             SELECT 1
-            FROM GroupMembers GM
-            JOIN Channels C ON GM.GroupID = C.GroupID
-            WHERE C.ChannelID = @channelId
-            AND GM.AccountID = @userId
+            FROM GroupMembers
+            WHERE GroupID = (
+                SELECT GroupID
+                FROM Channels
+                WHERE ChannelID = @channelId
+            )
+            AND AccountID = @userId
+            AND Role = 'Admin'
         `;
 
         const pool = await sql.connect(sqlConfig.returnServerConfig());
-        const isMemberResult = await pool
+        const isAdminResult = await pool
             .request()
             .input('channelId', sql.Int, channelId)
             .input('userId', sql.Int, userId)
-            .query(isMemberQuery);
+            .query(isAdminQuery);
 
+        if (isAdminResult.rowsAffected[0] !== 1) {
+            return res.status(403).json({ message: 'You do not have permission to change the channel name' });
+        }
         if (isMemberResult.rowsAffected[0] !== 1) {
             return res.status(403).json({ message: 'You do not have permission to remove a member from this channel' });
         }
@@ -273,4 +342,4 @@ const channelInfo = async (req, res) => {
     }
 };
 
-module.exports={channelInfo, channelList, deleteChannel, createChannel, addMember, removeMember}
+module.exports={channelInfo, channelList, deleteChannel, createChannel, addMember, removeMember, updateChannelName}
