@@ -46,7 +46,7 @@ CREATE TABLE [dbo].[GroupMembers](
 
 /****** Channels ******/
 CREATE TABLE [dbo].[Channels](
-    ChannelID int NOT NULL PRIMARY KEY,
+    ChannelID INT PRIMARY KEY IDENTITY(1,1),
     GroupID int NOT NULL,
     ChannelName varchar(100) NOT NULL,
     ChannelType varchar(50) NOT NULL,

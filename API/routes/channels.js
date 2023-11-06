@@ -3,18 +3,16 @@ const router = express.Router();
 const sql = require('mssql');
 const sqlConfig = require('../config');
 const authenticateToken = require('../middleware/authenticateToken');
-const friendshipController = require('../controllers/channelController')
-
-var jsonparser = bodyParser.json();
+const channelController = require('../controllers/channelController')
 
 //Create a channel within a grp
-router.post('/groups/:groupId/channels', authenticateToken, createChannel);
-router.delete('/groups/:groupId/channels/:channelId', authenticateToken, removeChannel);
-router.post('/groups/:groupId/channels/:channelId/members', authenticateToken, addMembersToChannel);
-router.delete('/groups/:groupId/channels/:channelId/members/:userId', authenticateToken, removeUserFromChannel);
-router.get('/groups/:groupId/channels', authenticateToken, getAllChannelsForGroup);
-router.get('/groups/:groupId/channels/:channelId', authenticateToken, getChannelInfo);
-router.put('/groups/:groupId/channels/:channelId/name', authenticateToken, updateChannelName);
+router.post('/groups/:groupId/channels', authenticateToken, channelController.createChannel);
+router.delete('/groups/:groupId/channels/:channelId', authenticateToken, channelController.deleteChannel);
+router.post('/groups/:groupId/channels/:channelId/members', authenticateToken, channelController.addMember);
+router.delete('/groups/:groupId/channels/:channelId/members/:userId', authenticateToken, channelController.removeMember);
+router.get('/groups/:groupId/channels', authenticateToken, channelController.channelList);
+router.get('/groups/:groupId/channels/:channelId', authenticateToken, channelController.channelInfo);
+router.put('/groups/:groupId/channels/:channelId/name', authenticateToken, channelController.updateChannelName);
 
 
 
