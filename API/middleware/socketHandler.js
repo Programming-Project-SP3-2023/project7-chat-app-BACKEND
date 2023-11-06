@@ -217,6 +217,8 @@ function initialiseSockets(server, frontEndpoint) {
             //         hasAccess = chatData.hasAccessToChannel(channelID, socket.accountID);
             //         if (hasAccess) {
                         socket.join(channelID);
+                        console.log(channelID);
+                        console.log(socket.rooms);
 
 
 
@@ -240,7 +242,9 @@ function initialiseSockets(server, frontEndpoint) {
             }
         });
 
-        socket.on('leaveVC', ({channelID}) => {
+        socket.on('leaveVC', (channelID) => {
+            console.log("Leaving: " + channelID);
+            console.log(socket.rooms);
             if (socket.rooms.has(channelID)) {
                 socket.to(channelID).emit("userLeftVC", {
                     peerID: socket.accountID
@@ -250,6 +254,8 @@ function initialiseSockets(server, frontEndpoint) {
                     "response": "left channel"
                 });
 
+            } else {
+                console.log("room not found");
             }
         });
 

@@ -9,26 +9,25 @@ function App() {
   //connect to socket server
   const socket = io('http://localhost:4000', { autoConnect: false });
 
-  socket.connect() //you should receive a connected message with 'awaiting username'
+  const username = Math.random() * 100;
 
-  const username = "skoot";
+  socket.connect() //you should receive a connected message with 'awaiting username'
 
   socket.on("connectionResponse", (connectionResponse) => {
     console.log(connectionResponse);
   });
 
-
+  //will receive a peerID whenever someone joins a channel you are in and calls them
   socket.on("userJoinVC", (peerID) => {
-    console.log("test");
-    console.log("connected peer: " + peerID);
-
-    //will receive a peerID whenever someone joins a channel you are in
-    //from here you can call the peerID to join them to the VC
     call(peerID);
   });
 
   socket.on("error", () => {
     console.log("error");
+  })
+
+  socket.on("userLeftVC", (peerID) => {
+    closeCall(peerID);
   })
 
   const [peerId, setPeerId] = useState('');
@@ -67,7 +66,6 @@ function App() {
         call.on('stream', function(remoteStream) {
           remoteAudioRef.current.srcObject = remoteStream
           remoteAudioRef.current.play();
-          // remoteAudioRefs.current[call.remotePeerId] = remoteAudioRef;
         });
       });
     })
@@ -77,8 +75,6 @@ function App() {
 
   //call peers
   const call = (remotePeerId) => {
-    // createDataConnection(remotePeerId);
-
     var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 
     setRemotePeers((prevPeers) => [...prevPeers, remotePeerId]);
@@ -87,23 +83,37 @@ function App() {
       const call = peerInstance.current.call(remotePeerId, mediaStream);
       setRemoteCalls((prevCalls) => [...prevCalls, call]);
       
-      console.log(remoteCalls);
+      console.log(call);
       call.on('stream', (remoteStream) => {
         remoteAudioRef.current.srcObject = remoteStream
         remoteAudioRef.current.play();
-        // remoteAudioRefs.current[remotePeerId] = remoteAudioRef;
       });
     });
   }
 
-  const closeCalls = () => {
-    console.log(remoteCalls);
+  //close connections with all users in the room
+  const closeCalls = (ChannelID) => {
+    //emit to other users that the user is leaving the channel
+    socket.emit("leaveVC", ChannelID);
 
+    //close the peer connection for each user.
     for(var i=0; i<remoteCalls.length; i++){
       remoteCalls[i].close();
     }
-
+    //clear the remote calls array
     remoteCalls.splice(0, remoteCalls.length);
+  }
+
+  // close a connection with a specific user
+  const closeCall = (peerID) => {
+    console.log(peerID);
+    for(var i=0; i<remoteCalls.length; i++){
+      if(remoteCalls[i].peer = peerID){
+        console.log("removed: " + peerID);
+        remoteCalls[i].close();
+        remoteCalls.splice(i, 1);
+      }
+    }
   }
 
   socket.emit("connectSocket", peerId, username); //this should return an OK response to the following listener:
@@ -114,7 +124,7 @@ function App() {
       <h1>Current user id is {peerId}</h1>
 
       <button onClick={() => joinVC(3)}>Join Room 1</button>
-      <button onClick={() => closeCalls()}>leave Room</button>
+      <button onClick={() => closeCalls(3)}>leave Room</button>
 
       
       <div>
