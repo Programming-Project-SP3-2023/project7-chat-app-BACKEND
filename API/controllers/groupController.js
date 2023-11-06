@@ -210,6 +210,56 @@ const deleteGroup = async (req, res) => {
   }
 };
 
+//edit a group's name
+const editGroupName = async (req, res) => {
+  try {
+    const groupId = req.params.groupId;
+    const { newGroupName } = req.body;
+
+    // check if user is the admin of the group
+    const isAdminQuery = `
+      SELECT 1
+      FROM GroupMembers
+      WHERE GroupID = @groupId
+      AND AccountID = @userAccountId
+      AND Role = 'Admin'
+    `;
+    const pool = await sql.connect(sqlConfig.returnServerConfig());
+    const isAdminResult = await pool
+      .request()
+      .input("groupId", sql.Int, groupId)
+      .input("userAccountId", sql.Int, req.user.AccountID) 
+      .query(isAdminQuery);
+
+    // if user is not an admin, return an error
+    if (isAdminResult.rowsAffected[0] !== 1) {
+      return res
+        .status(403)
+        .json({ message: "You do not have permission to update this group's name" });
+    }
+
+    // update group name in the database
+    const updateGroupNameQuery = `
+      UPDATE Groups
+      SET GroupName = @newGroupName
+      WHERE GroupID = @groupId
+    `;
+
+    await pool
+      .request()
+      .input("newGroupName", sql.NVarChar(50), newGroupName)
+      .input("groupId", sql.Int, groupId)
+      .query(updateGroupNameQuery);
+
+    return res.status(200).json({ message: "Group name updated successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+
+
 const createGroup = async (req, res) => {
   try {
     // Get group details from the request body
@@ -270,4 +320,5 @@ module.exports = {
   groupInfo,
   currentGroups,
   addMember,
+  editGroupName,
 };
