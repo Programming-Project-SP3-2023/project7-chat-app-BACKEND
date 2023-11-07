@@ -183,7 +183,7 @@ function initialiseSockets(server, frontEndpoint) {
 
         //group sockets
 
-        socket.on("connectGroup", async ({groupID}) => {
+        socket.on("connectGroup", async ({ groupID }) => {
 
             //checks two things:
             //1. is this a real group ID? and
@@ -195,14 +195,14 @@ function initialiseSockets(server, frontEndpoint) {
 
             const isValidGroupID = await chatData.isValidGroupID(groupID, socket.accountID);
 
-            if(isValidGroupID){
+            if (isValidGroupID) {
 
                 socket.emit("connectGroupResponse", {
                     "response": "Joined successfully"
                 })
 
                 //checks if group is already connected, and disconnects it if so
-                if(socket.connectedGroupID){
+                if (socket.connectedGroupID) {
                     socket.emit("disconnectGroup");
                 }
 
@@ -232,20 +232,20 @@ function initialiseSockets(server, frontEndpoint) {
                         }
                     }
                 });
-                
+
 
 
                 socket.on("getChannelMessages", ({ channelID }) => {
                     console.log("checking messages for " + channelID)
                     if (socket.rooms.has(channelID)) {
                         console.log("socket in room, grabbing history");
-        
+
                         //grab top 10 message history for this chat
                         chatData.getChannelMessageHistory(channelID, 10).then(messages => {
                             console.log(messages);
                             socket.emit("messageHistory", messages);
                         });
-        
+
                     }
                     else {
                         socket.emit("error", {
@@ -257,13 +257,13 @@ function initialiseSockets(server, frontEndpoint) {
                 socket.on("moreChannelMessages", ({ channelID, num }) => {
                     if (socket.rooms.has(channelID)) {
                         console.log("socket in room, grabbing history");
-        
+
                         //grab top 10 message history for this chat
                         chatData.getChannelMessageHistory(channelID, num).then(messages => {
                             console.log(messages);
                             socket.emit("channelMessageHistory", messages);
                         });
-        
+
                     }
                     else {
                         socket.emit("error", {
@@ -271,10 +271,10 @@ function initialiseSockets(server, frontEndpoint) {
                         });
                     }
                 });
-        
+
                 socket.on("sendChannelMessage", ({ channelID, message }) => {
                     let timestamp = new Date().getTime();
-        
+
                     if (socket.rooms.has(channelID)) {
                         socket.to(channelID).emit("channelMessageResponse", {
                             message,
@@ -291,13 +291,104 @@ function initialiseSockets(server, frontEndpoint) {
                 });
 
 
+                //VOIP Channels
 
+                socket.on('joinVC', (channelID, peerID) => {
+                    socket.peerID = peerID;
+                    
+                    // console.log(socket.rooms);
+                    // console.log(socket.accountID);
+                    // console.log(channelID);
+                    // //checking if socket is already in room.
+                    if (!socket.rooms.has(channelID)) {
+                        //     isValidID = chatData.isValidChannelID(channelID)
+                        //     if (isValidID) {
+                        //         hasAccess = chatData.hasAccessToChannel(channelID, socket.accountID);
+                        //         if (hasAccess) {
+                        socket.join(channelID);
+                        console.log(channelID);
+                        console.log(socket.rooms);
+
+
+
+                        // socket.emit("updateVCStatus", {
+                        //     "response": "joined channel"
+                        // });
+                        //announce to all members of voice chat of the user joining and ask them to connect
+                        socket.to(channelID).emit('userJoinVC', {
+                            peerID: socket.peerID,
+                            username: socket.username
+                        });
+                        //         }
+                        //     }
+                        //     else {
+                        //         socket.emit("error", {
+                        //             "error": "channelID not valid"
+                        //         });
+                        //     }
+                    }
+                    else {
+                        socket.emit("error", {
+                            "error": "VC already connected."
+                        });
+                    }
+                });
+
+                socket.on('leaveVC', (channelID) => {
+                    console.log("Leaving: " + channelID);
+                    console.log(socket.rooms);
+                    if (socket.rooms.has(channelID)) {
+                        socket.to(channelID).emit("userLeftVC", {
+                            peerID: socket.accountID
+                        });
+                        socket.leave(channelID);
+                        socket.emit("updateVCStatus", {
+                            "response": "left channel"
+                        });
+
+                    } else {
+                        console.log("room not found");
+                    }
+                });
+
+                socket.on('switchVC', ({ channelID, newChannelID }) => {
+                    if (socket.rooms.has(channelID)) {
+                        isValidID = chatData.isValidChannelID(newChannelID)
+                        if (isValidID) {
+                            hasAccess = chatData.hasAccessToChannel(channelID, socket.accountID);
+                            if (hasAccess) {
+                                socket.leave(channelID);
+                                socket.emit("updateVCStatus", {
+                                    "response": "left channel"
+                                });
+                                socket.join(newChannelID);
+                                socket.emit("updateVCStatus", {
+                                    "response": "joined channel"
+                                });
+                                //announce to all members of voice chat of the user joining and ask them to connect
+                                socket.to(newChannelID).emit("userJoinVC", {
+                                    peerID: socket.accountID
+                                });
+                            }
+                        }
+                        else {
+                            socket.emit("error", {
+                                "error": "channelID not valid"
+                            });
+                        }
+                    }
+                    else {
+                        socket.emit("error", {
+                            "error": "VC not connected."
+                        });
+                    }
+                });
 
 
 
 
             }
-            else{
+            else {
                 socket.emit("error", {
                     "error": "Invalid Group ID or permissions insufficient"
                 })
