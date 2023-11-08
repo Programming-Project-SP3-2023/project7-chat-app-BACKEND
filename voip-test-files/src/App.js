@@ -17,34 +17,30 @@ function App() {
     console.log(connectionResponse);
   });
 
-  //will receive a peerID whenever someone joins a channel you are in and calls them
-  socket.on("userJoinVC", (peerID) => {
-    call(peerID);
-  });
-
-  socket.on("error", () => {
-    console.log("error");
-  })
-
-  socket.on("userLeftVC", (peerID) => {
-    closeCall(peerID);
-  })
-
   const [peerId, setPeerId] = useState('');
   const [remotePeers, setRemotePeers] = useState([]);
   const [remoteCalls, setRemoteCalls] = useState([]);
   //other users Peer IDs
-  const remoteAudioRefs = useRef([]);
+  const [remoteAudioStreams, setRemoteAudioStreams] = useState([]);
   const remoteAudioRef = useRef(null);
   //current user
   const peerInstance = useRef(null);
 
   // join a VC
   const joinVC = (ChannelID, peerId) => {
-    console.log(ChannelID);
     //joins you to the VC, server will check if you have access and will throw error if it fails
     socket.emit("joinVC", ChannelID);
   }
+
+  //will receive a peerID whenever someone joins a channel you are in and calls them
+  socket.on("userJoinVC", (peerID) => {
+    call(peerID);
+  });
+
+  // Function to add a new media stream to the state
+  const addMediaStream = (remoteStream) => {
+    setRemoteAudioStreams((prevStreams) => [...prevStreams, remoteStream]);
+  };
 
   useEffect(() => {
     const peer = new Peer();
@@ -64,16 +60,7 @@ function App() {
       getUserMedia({ video: false, audio: true }, (mediaStream) => {
         call.answer(mediaStream)
         call.on('stream', function(remoteStream) {
-        console.log("hi - 1");
-
-          const audioElement = new Audio();
-          audioElement.srcObject = remoteStream;
-
-          remoteAudioRefs.current.push(audioElement);
-
-          // remoteAudioRef.current.srcObject = remoteStream
-          // remoteAudioRef.current.play();
-          // addAudioElement(remoteStream);
+          addMediaStream(remoteStream);
         });
       });
     })
@@ -91,13 +78,8 @@ function App() {
       const call = peerInstance.current.call(remotePeerId, mediaStream);
       setRemoteCalls((prevCalls) => [...prevCalls, call]);
       
-      console.log(call);
       call.on('stream', (remoteStream) => {
-        // console.log("hi - 2");
-        // const audioElement = new Audio();
-        // audioElement.srcObject = remoteStream;
-
-        // remoteAudioRefs.current.push(audioElement);
+        addMediaStream(remoteStream);
       });
     });
   }
@@ -137,33 +119,9 @@ function App() {
       <button onClick={() => joinVC(3)}>Join Room 1</button>
       <button onClick={() => closeCalls(3)}>leave Room</button>
 
-      {remoteAudioRefs.current.map((audioElement, index) => (
-        <div key={index}>
-          <audio ref={audioElement} autoPlay />
-        </div>
+      {remoteAudioStreams.map((remoteStream, index) => (
+      <audio key={index} autoPlay ref={(audioRef) => audioRef.srcObject = remoteStream} />
       ))}
-
-      
-      {/* <div>
-        <audio ref={remoteAudioRef} />
-      </div> */}
-      {/* <div> */}
-        {/* {remotePeers.map((remotePeerId) => (
-          <div key={remotePeerId}>
-            <h2>Remote Peer ID: {remotePeerId}</h2>
-            <audio
-              ref={(el) => (remoteAudioRefs.current[remotePeerId] = el)}
-            />
-          </div>
-        ))} */}
-        {/* {remoteAudioRefs.current.map((remoteStream, index) => {
-          <div key={index}>
-            <audio>
-              <source src={remoteStream.src} />
-            </audio>
-          </div>
-        })} */}
-      {/* </div> */}
     </div>
   );
 }

@@ -210,7 +210,6 @@ function initialiseSockets(server, frontEndpoint) {
         socket.on('joinVC', (channelID, peerId) => {
             // console.log(socket.rooms);
             // console.log(socket.accountID);
-            // console.log(channelID);
             // //checking if socket is already in room.
             if (!socket.rooms.has(channelID)) {
             //     isValidID = chatData.isValidChannelID(channelID)
