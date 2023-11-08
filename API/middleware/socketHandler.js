@@ -293,7 +293,36 @@ function initialiseSockets(server, frontEndpoint) {
 
                 //VOIP Channels
 
-                socket.on('joinVC', (channelID, peerID) => {
+                socket.on('getCurrentUsers', ({channelID}) => {
+                    console.log("getting users in channel " +channelID+ typeof channelID);
+                    console.log("room: "+io.sockets.adapter.rooms.get(channelID))
+                    const currentUsers = [];
+                    let roomSockets = io.sockets.adapter.rooms.get(channelID);
+
+                    if(roomSockets){
+                        let socketArray = Array.from(roomSockets);
+
+                        for (let socketID of socketArray){
+                            let rSocket = io.sockets.sockets.get(socketID);
+                            console.log(rSocket.username);
+                            if (rSocket && rSocket.username && rSocket.peerID) {
+                                let user = {
+                                    username: rSocket.username,
+                                    peerID: rSocket.peerID
+                                };
+                                currentUsers.push(user);
+                            }
+                        }
+
+                    }
+                    console.log(currentUsers);
+                    socket.emit("currentUsers", (currentUsers));
+
+
+
+                });
+
+                socket.on('joinVC', ({channelID, peerID}) => {
                     socket.peerID = peerID;
                     
                     // console.log(socket.rooms);
@@ -306,16 +335,16 @@ function initialiseSockets(server, frontEndpoint) {
                         //         hasAccess = chatData.hasAccessToChannel(channelID, socket.accountID);
                         //         if (hasAccess) {
                         socket.join(channelID);
+                        console.log("joined channel");
                         console.log(channelID);
-                        console.log(socket.rooms);
 
 
 
-                        // socket.emit("updateVCStatus", {
-                        //     "response": "joined channel"
-                        // });
+                         socket.emit("updateVCStatus", {
+                             "response": "joined channel"
+                         });
                         //announce to all members of voice chat of the user joining and ask them to connect
-                        socket.to(channelID).emit('userJoinVC', {
+                        socket.to(channelID).emit("userJoinVC", {
                             peerID: socket.peerID,
                             username: socket.username
                         });
@@ -334,7 +363,7 @@ function initialiseSockets(server, frontEndpoint) {
                     }
                 });
 
-                socket.on('leaveVC', (channelID) => {
+                socket.on('leaveVC', ({channelID}) => {
                     console.log("Leaving: " + channelID);
                     console.log(socket.rooms);
                     if (socket.rooms.has(channelID)) {
