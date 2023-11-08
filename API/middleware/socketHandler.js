@@ -293,9 +293,9 @@ function initialiseSockets(server, frontEndpoint) {
 
                 //VOIP Channels
 
-                socket.on('getCurrentUsers', ({channelID}) => {
-                    console.log("getting users in channel " +channelID+ typeof channelID);
-                    console.log("room: "+io.sockets.adapter.rooms.get(channelID))
+                socket.on('getCurrentUsers', async ({channelID}) => {
+                    console.log("getting users in channel " +channelID);
+                    console.log(io.sockets.adapter.rooms.get(channelID))
                     const currentUsers = [];
                     let roomSockets = io.sockets.adapter.rooms.get(channelID);
 
@@ -322,8 +322,16 @@ function initialiseSockets(server, frontEndpoint) {
 
                 });
 
+                socket.on('callResponse', ({socketID, myPeerID}) => {
+                    socket.to(socketID).emit("callAnswered", {
+                        peerID: myPeerID
+                    });
+                });
+
                 socket.on('joinVC', ({channelID, peerID}) => {
                     socket.peerID = peerID;
+
+                    console.log(socket.id);
                     
                     // console.log(socket.rooms);
                     // console.log(socket.accountID);
@@ -345,6 +353,7 @@ function initialiseSockets(server, frontEndpoint) {
                          });
                         //announce to all members of voice chat of the user joining and ask them to connect
                         socket.to(channelID).emit("userJoinVC", {
+                            socketID: socket.id,
                             peerID: socket.peerID,
                             username: socket.username
                         });
@@ -368,7 +377,7 @@ function initialiseSockets(server, frontEndpoint) {
                     console.log(socket.rooms);
                     if (socket.rooms.has(channelID)) {
                         socket.to(channelID).emit("userLeftVC", {
-                            peerID: socket.accountID
+                            peerID: socket.peerID
                         });
                         socket.leave(channelID);
                         socket.emit("updateVCStatus", {
