@@ -14,6 +14,7 @@ function initialiseSockets(server, frontEndpoint) {
         // console.log("Connection established. Awaiting username.");
 
         socket.on("connectSocket", (accountID, username) => {
+            console.log(accountID);
 
             socket.accountID = accountID;
             socket.username = username;

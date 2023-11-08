@@ -34,7 +34,7 @@ function App() {
   const [remotePeers, setRemotePeers] = useState([]);
   const [remoteCalls, setRemoteCalls] = useState([]);
   //other users Peer IDs
-  const remoteAudioRefs = useRef({});
+  const remoteAudioRefs = useRef([]);
   const remoteAudioRef = useRef(null);
   //current user
   const peerInstance = useRef(null);
@@ -64,8 +64,16 @@ function App() {
       getUserMedia({ video: false, audio: true }, (mediaStream) => {
         call.answer(mediaStream)
         call.on('stream', function(remoteStream) {
-          remoteAudioRef.current.srcObject = remoteStream
-          remoteAudioRef.current.play();
+        console.log("hi - 1");
+
+          const audioElement = new Audio();
+          audioElement.srcObject = remoteStream;
+
+          remoteAudioRefs.current.push(audioElement);
+
+          // remoteAudioRef.current.srcObject = remoteStream
+          // remoteAudioRef.current.play();
+          // addAudioElement(remoteStream);
         });
       });
     })
@@ -85,8 +93,11 @@ function App() {
       
       console.log(call);
       call.on('stream', (remoteStream) => {
-        remoteAudioRef.current.srcObject = remoteStream
-        remoteAudioRef.current.play();
+        // console.log("hi - 2");
+        // const audioElement = new Audio();
+        // audioElement.srcObject = remoteStream;
+
+        // remoteAudioRefs.current.push(audioElement);
       });
     });
   }
@@ -126,20 +137,33 @@ function App() {
       <button onClick={() => joinVC(3)}>Join Room 1</button>
       <button onClick={() => closeCalls(3)}>leave Room</button>
 
+      {remoteAudioRefs.current.map((audioElement, index) => (
+        <div key={index}>
+          <audio ref={audioElement} autoPlay />
+        </div>
+      ))}
+
       
-      <div>
+      {/* <div>
         <audio ref={remoteAudioRef} />
-      </div>
-      <div>
-        {remotePeers.map((remotePeerId) => (
+      </div> */}
+      {/* <div> */}
+        {/* {remotePeers.map((remotePeerId) => (
           <div key={remotePeerId}>
             <h2>Remote Peer ID: {remotePeerId}</h2>
             <audio
               ref={(el) => (remoteAudioRefs.current[remotePeerId] = el)}
             />
           </div>
-        ))}
-      </div>
+        ))} */}
+        {/* {remoteAudioRefs.current.map((remoteStream, index) => {
+          <div key={index}>
+            <audio>
+              <source src={remoteStream.src} />
+            </audio>
+          </div>
+        })} */}
+      {/* </div> */}
     </div>
   );
 }
