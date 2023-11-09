@@ -271,7 +271,7 @@ const removeMember = async (req, res) => {
         if (isAdminResult.rowsAffected[0] !== 1) {
             return res.status(403).json({ message: 'You do not have permission to remove a member from this channel' });
         }
-
+        console.log(memberId)
         // If the user has permission, remove the member from the channel
         const removeMemberQuery = `
             DELETE FROM ChannelMembers
