@@ -18,18 +18,25 @@ router.post('/', jsonparser, async (req, res, next) => {
         const result = await pool
             .request()
             .input('username', sql.NVarChar, username) // Corrected data type
-            .query('SELECT AccountID, PasswordHash FROM Logins WHERE Username = @username');
+            .query('SELECT L.AccountID, L.PasswordHash, A.IsVerified FROM Logins L INNER JOIN Accounts A ON L.AccountID = A.AccountID WHERE L.Username = @username');
         
         if (result.recordset.length === 0) {
-            return res.status(401).json({ message: 'Invalid username or password' });
+            return res.status(200).json({ errorType: 'InvalidCredentials', message: 'Invalid username or password. Please try again' });
         }
 
         const user = result.recordset[0];
+
+        // Check if the email address is verified (IsVerified is 1)
+        
+        if (user.IsVerified !== true) {
+            return res.status(200).json({ errorType: 'EmailNotVerified', message: 'Email verification has not been completed. Please complete email verification!' });
+        }
+
         // Compare provided password with stored hash
         const isPasswordValid = await bcrypt.compare(password, user.PasswordHash);
         
         if (!isPasswordValid) {
-            return res.status(401).json({ message: 'Invalid username or password' });
+            return res.status(200).json({ errorType: 'InvalidCredentials', message: 'Invalid username or password. Please try again' });
         }
         //Set web token with key taken from .env
         const jwtSecret = process.env.JWT_SECRET;
@@ -40,5 +47,6 @@ router.post('/', jsonparser, async (req, res, next) => {
         res.status(500).json({ message: 'Server error' });
     }
 });
+
 
 module.exports = router;
