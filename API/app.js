@@ -27,7 +27,7 @@ app.use('/login', loginRoutes);
 app.use('/avatar', avatarRoutes)
 app.use('/profile', profileRoutes);
 app.use('/friendships', friendshipsRoutes);
-app.use('admin', adminRoutes);
+app.use('/admin', adminRoutes);
 
 
 //export the app

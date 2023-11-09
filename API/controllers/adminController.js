@@ -2,6 +2,8 @@ const sql = require('mssql');
 require ('dotenv').config();
 const sqlConfig = require('../config');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
 
 //returns a list of user accounts
 const getAccounts = async (req, res) => {
@@ -39,11 +41,13 @@ const getAccounts = async (req, res) => {
 const updateAccount = async (req, res) => {
     try{
         sql.connect(sqlConfig.returnServerConfig()).then(async function(){
+            console.log("before");
             //select results similar to the input display name entered
             const result = await sql.query
-            (`UPDATE Accounts SET Email = ${req.Email}, DisplayName = ${req.DisplayName}, Dob = ${req.Dob}, Accounts = ${req.Avatar}
-            Where AccountID = ${req.AccountID}`);
+            (`UPDATE Accounts SET Email = '${req.body.Email}', DisplayName = '${req.body.DisplayName}', Dob = '${req.body.Dob}', Avatar = '${req.body.Avatar}' Where AccountID = ${req.body.AccountID}`);
             
+            console.log("After");
+
             const userList = result.recordsets;
             //return any results found
             if(result.rowsAffected > 0){
@@ -64,6 +68,45 @@ const updateAccount = async (req, res) => {
     }
 }
 
+//Delete the user account details
+const deleteAccount = async (req, res) => {
+    try{
+        sql.connect(sqlConfig.returnServerConfig()).then(async function(){
+
+            const accountType = await sql.query
+            (`SELECT AccountID, isAdmin FROM Accounts WHERE AccountID = '${req.body.AccountID}' AND isAdmin = 1`);
+
+            if(accountType.recordset.length !== 0){
+                return res.status(401).json({ message: 'You cant delete admin accounts' }); 
+            }
+
+            //select results similar to the input display name entered
+            var result = await sql.query
+            (`DELETE FROM Logins WHERE AccountID = '${req.body.AccountID}'`);
+
+            result = await sql.query
+            (`DELETE FROM Accounts WHERE AccountID = '${req.body.AccountID}'`);
+
+            //return any results found
+            if(result.rowsAffected > 0){
+                return res.status(200).json({
+                    Message: "Account Deleted"
+                });
+            } else {
+                return res.status(400).json({
+                    Message: "Account not found"
+                });
+            }
+        });
+    //catch any errors
+    } catch{
+        return res.status(400).json({
+            Message: "Server Error"
+        });
+    }
+}
+
+
 //changes the users password
 const changePassword = async (req, res) => {
     try{
@@ -79,7 +122,7 @@ const changePassword = async (req, res) => {
         sql.connect(sqlConfig.returnServerConfig()).then(async function(){
             //select results similar to the input display name entered
             const result = await sql.query
-            (`UPDATE Logins SET password = ${hashedPassword} Where AccountID = ${req.AccountID}`);
+            (`UPDATE Logins SET PasswordHash = '${hashedPassword}' Where AccountID = '${req.body.AccountID}'`);
             
             //return any results found
             if(result.rowsAffected > 0){
@@ -104,8 +147,6 @@ const adminLogin = async (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
 
-    
-
     try {
         const pool = await sql.connect(sqlConfig.returnServerConfig());
         // Get user's info by username
@@ -117,11 +158,23 @@ const adminLogin = async (req, res) => {
         if (result.recordset.length === 0) {
             return res.status(401).json({ message: 'Invalid username or password' });
         }
+        const user = result.recordset[0];
+
+        console.log(user);
+        console.log(user.AccountID);
         
         //TODO: Check if isAdmin = 1;
+        const accountType = await pool
+            .request()
+            .input('accountID', user.AccountID) // Corrected data type
+            .query('SELECT AccountID, isAdmin FROM Accounts WHERE accountID = accountID AND isAdmin = 1');
 
+        if(accountType.recordset.length === 0){
+            return res.status(401).json({ message: 'You must be an admin to login to this site' }); 
+        }
 
-        const user = result.recordset[0];
+        console.log("test");
+        
         // Compare provided password with stored hash
         const isPasswordValid = await bcrypt.compare(password, user.PasswordHash);
         
@@ -141,5 +194,7 @@ const adminLogin = async (req, res) => {
 module.exports={
     getAccounts,
     updateAccount,
-    changePassword
+    deleteAccount,
+    changePassword,
+    adminLogin
 }
