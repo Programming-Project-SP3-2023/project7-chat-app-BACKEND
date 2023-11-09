@@ -320,7 +320,7 @@ const channelList = async (req, res) => {
 
     // Query to retrieve a list of channels for the specified group
     const channelListQuery = `
-            SELECT C.ChannelID, C.Visibility, C.ChannelType
+            SELECT C.ChannelID, C.Visibility, C.ChannelType, C.ChannelName
             FROM Channels C
             WHERE C.GroupID = @groupId
         `;
