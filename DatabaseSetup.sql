@@ -5,6 +5,9 @@ CREATE TABLE [dbo].[Accounts](
 	DisplayName varchar(50) NOT NULL,
 	Dob date NOT NULL,
 	Avatar varchar(max),
+	IsVerified bit NOT NULL DEFAULT 0, -- Add IsVerified column
+    EmailToken varchar(64), -- Add EmailToken column
+	TokenCreationDateTime datetime, -- Add Token creation date column
 	PRIMARY KEY (AccountID)
 )
 
@@ -77,6 +80,15 @@ CREATE TABLE [dbo].[Messages](
 	ChatID int NOT NULL,
 	MessageBody varchar(50),
 	SenderID int NOT NULL,
-	TimeSent datetime NOT NULL,
+	TimeSent bigint NOT NULL,
 	FOREIGN KEY (ChatID) REFERENCES Friendships(FriendshipID)
+)
+
+CREATE TABLE [dbo].[ChannelMessages](
+	ChannelMessageID int NOT NULL PRIMARY KEY IDENTITY(1,1),
+	ChannelID int NOT NULL,
+	MessageBody varchar(50),
+	SenderID int NOT NULL,
+	TimeSent bigint NOT NULL,
+	FOREIGN KEY (ChannelID) REFERENCES Channels(ChannelID)
 )

@@ -4,6 +4,8 @@ const sql = require('mssql');
 const bcrypt = require('bcrypt');
 const bodyParser = require('body-parser');
 const sqlConfig = require('../config');
+const crypto = require('crypto'); // Import the crypto module
+const { sendVerificationEmail } = require('../middleware/emailRegister.js'); // Import the email registration middleware
 
 var jsonParser = bodyParser.json()
 
@@ -11,6 +13,9 @@ router.post('/', jsonParser, (req, res, next) =>{
     
     //encrypt the users password
     const saltRounds = 10;
+    // Generate a 64-character hex value for EmailToken
+    const emailToken = crypto.randomBytes(32).toString('hex');
+
     let hashedPassword = null;
     bcrypt.genSalt(saltRounds, function(err, salt){
         bcrypt.hash(req.body.password, salt, function(err, hash){
@@ -24,7 +29,10 @@ router.post('/', jsonParser, (req, res, next) =>{
         email: req.body.email,
         dateOfBirth: req.body.dateOfBirth,
         username: req.body.username,
-        password: req.body.password
+        password: req.body.password,
+        isVerified: false,
+        emailToken: emailToken,
+        tokenCreationDateTime: new Date()
     }
 
     // submit user to the database
@@ -53,8 +61,8 @@ router.post('/', jsonParser, (req, res, next) =>{
 
         if(result.rowsAffected == 0){
             //insert new user into the database
-            result = await sql.query`INSERT INTO Accounts (Email, DisplayName, Dob, Avatar) 
-            VALUES (${user.email}, ${user.name}, ${user.dateOfBirth}, 'NULL')`
+            result = await sql.query`INSERT INTO Accounts (Email, DisplayName, Dob, Avatar, IsVerified, EmailToken, TokenCreationDateTime) 
+            VALUES (${user.email}, ${user.name}, ${user.dateOfBirth}, 'NULL', ${user.isVerified}, ${user.emailToken}, ${user.tokenCreationDateTime})`
 
             //select the accountID of the new user
             const AccountID = await sql.query`SELECT TOP 1 * FROM Accounts ORDER BY AccountID DESC`
@@ -62,6 +70,9 @@ router.post('/', jsonParser, (req, res, next) =>{
             //insert login details into the database
             result = await sql.query`INSERT INTO Logins (AccountID, Username, PasswordHash) 
             VALUES (${AccountID.recordset[0].AccountID}, ${user.username}, ${hashedPassword})`
+
+            // After successfully inserting the user into the database, send the verification email
+            sendVerificationEmail(user.email, user.emailToken);
             
             //return OK if no issues occured
             res.status(200).json({

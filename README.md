@@ -199,10 +199,23 @@ Post request to:
         "currentUserID": "5",
         "avatarData": "avatarData"
     }
+### uploading a group avatar
+Post request to:
+Https:/localhost:4000/avatar/upload-group-avatar
+
+### Example Input
+
+Headers: {
+    'Authorization': 'JWT_TOKEN'
+},
+Body: {
+    "groupId": "1",
+    "avatarData": "BASE64_IMAGE_DATA"
+}
 
 <!-- Get Avatar -->
 ### Getting a avatar
-    
+
     Https:/localhost:4000/avatar/:userId
 
 ### Example Input
@@ -213,6 +226,100 @@ Post request to:
         "AccountID": "5",
         "avatarData": "avatarData"
     }
+
+
+<!---------------------- Groups ---------------------------------->
+## Groups
+<!-- create group -->
+### Creating a group
+Post request to:
+
+Https:/localhost:4000/groups/create
+Headers: {
+    'Authorization': 'JWT_TOKEN'
+},
+Body: {
+    "groupName": "Example Group"
+}
+
+<!--Delete group-->
+### Deleting a group
+
+Delete request to:
+Https:/localhost:4000/groups/delete/{groupId}
+
+### Example Input
+Headers: {
+    'Authorization': 'JWT_TOKEN'
+}
+
+<!-- add a member -->
+### Add Member
+POST request to:
+http://localhost:4000/groups/add-member
+
+### Example Input
+Headers: {
+    'Authorization': 'JWT_TOKEN'
+}
+{
+    "email": "jakeg@email.com",
+    "groupId": 3
+}
+
+
+<!-- Remove a member -->
+### Delete Member
+Post request to:
+http://localhost:4000/groups/remove-member
+### Example Input
+Headers: {
+    'Authorization': 'JWT_TOKEN'
+}
+{
+    "accountId": 1000,
+    "groupId": 3
+}
+
+<!-- Get Current Groups - returns a list of group IDs to be used for get group info -->
+### Get Current Groups
+Get request to:
+http://localhost:4000/groups/current-groups
+
+### Example Input
+Headers: {
+    'Authorization': 'JWT_TOKEN'
+}
+
+### Example Response
+{
+    "groupIds": [
+        3,
+        4,
+        5,
+        6,
+        7
+    ]
+}
+
+<!-- Get Group Information -->
+### Group Info
+Get request to:
+http://localhost:4000/groups/{groupId}
+
+### Example Input
+Headers: {
+    'Authorization': 'JWT_TOKEN'
+}
+### Example Response
+{
+    "groupName": "jaygroup",
+    "groupAvatar": null,
+    "members": [
+        1008,
+        1000
+    ]
+}
 
 
 <!---------------------- Profiles ---------------------------------->
@@ -373,4 +480,33 @@ userConnected   Listens for any other user joining the server.
 error   Listens for all errors
 
 userDisconnected    Listens for disconnection
+
+<!---------------------- SocketIO CHANNEL Messages ---------------------------------->
+
+Prerequisites are:
+
+Must have socket.connect() done
+Must have socket.connectSocket emitted.
+
+Then:
+
+join a group with socket.emit("connectGroup", {"groupID": ???})
+
+Listen for "connectGroupResponse" it should respond with "Joined Successfully" or an error msg. If joined successfully:
+
+
+Joining channels
+
+socket.emit("connectChannel", {"channelID": ???})
+
+Listen for connectChannelResponse should respond "OK" or an error
+
+Once joined a channel, you can:
+
+socket.emit:
+"sendChannelMessage" with "channelID": ??, "message": "Test Message"
+"getChannelMessages" with "channelID": ???
+"moreChannelMessages" with "channelID": ???, "num": X
+
+
 
