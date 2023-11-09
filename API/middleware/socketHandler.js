@@ -57,7 +57,7 @@ function initialiseSockets(server, frontEndpoint) {
             for (let [accountID, globalSocket] of io.of("/").sockets) {
                 //add only valid friendships to the array
                 console.log(socket.accountID + " and " + globalSocket.accountID)
-                if (globalSocket.accountID) {
+                if (socket.accountID && globalSocket.accountID) {
                     console.log("Checking friends for getonline friends");
                     const friendshipPromise = friendshipController.isActiveFriend(socket.accountID, globalSocket.accountID).then((isFriend) => {
                         console.log(isFriend);

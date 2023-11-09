@@ -240,7 +240,6 @@ async function isActiveFriend(ID1, ID2){
 
 
         const result = await sql.query(query);
-        console.log(result);
         //if there is an existing friend request return true
         if(result.rowsAffected > 0){
 

@@ -22,7 +22,6 @@ async function getMessageHistory(chatID, num) {
 
                 const result = await sql.query('SELECT TOP ' + num + ' * FROM Messages WHERE ChatID = \'' + chatID + '\' ORDER BY TimeSent DESC');
                 messages = result.recordsets;
-                console.log(messages);
                 resolve(messages);
 
             });
@@ -174,7 +173,6 @@ async function isInGroup(groupID, accountID) {
 
 async function isValidChannelID(channelID, groupID, accountID) {
     try {
-        console.log(channelID, accountID, groupID)
         if (!channelID) {
             return false;
         }
@@ -231,7 +229,6 @@ async function getChannelMessageHistory(channelID, num) {
 
                 const result = await sql.query('SELECT TOP ' + num + ' * FROM ChannelMessages WHERE ChannelID = \'' + channelID + '\' ORDER BY TimeSent DESC');
                 messages = result.recordsets;
-                console.log(messages);
                 resolve(messages);
 
             });
