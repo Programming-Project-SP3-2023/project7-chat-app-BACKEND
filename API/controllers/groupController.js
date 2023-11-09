@@ -35,7 +35,6 @@ const currentGroups = async (req, res) => {
   }
 };
 
-
 //Add a user to a group via email
 const addMember = async (req, res) => {
   try {
@@ -133,26 +132,12 @@ const groupInfo = async (req, res) => {
             WHERE G.GroupID = @groupId
         `;
 
-        const groupInfoResult = await pool
-            .request()
-            .input('groupId', sql.Int, groupId)
-            .query(groupInfoQuery);
-        if (groupInfoResult.recordset.length === 0) {
-            return res.status(404).json({ message: 'Group not found' });
-        }
-
-        // get group name, avatar, and member AccountIDs from the query result
-        const groupInfo = {
-            groupName: groupInfoResult.recordset[0].GroupName,
-            groupAvatar: groupInfoResult.recordset[0].GroupAvatar,
-            members: groupInfoResult.recordset.map((row) => row.AccountID),
-            
-        };
-        return res.status(200).json(groupInfo);
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: 'Internal Server Error' });
-
+    const groupInfoResult = await pool
+      .request()
+      .input("groupId", sql.Int, groupId)
+      .query(groupInfoQuery);
+    if (groupInfoResult.recordset.length === 0) {
+      return res.status(404).json({ message: "Group not found" });
     }
 
     // get members array
@@ -172,7 +157,7 @@ const groupInfo = async (req, res) => {
       groupID: groupId,
       groupName: groupInfoResult.recordset[0].GroupName,
       groupAvatar: groupInfoResult.recordset[0].GroupAvatar,
-      GroupMembers: members
+      GroupMembers: members,
     };
 
     return res.status(200).json(groupInfo);
@@ -243,14 +228,14 @@ const editGroupName = async (req, res) => {
     const isAdminResult = await pool
       .request()
       .input("groupId", sql.Int, groupId)
-      .input("userAccountId", sql.Int, req.user.AccountID) 
+      .input("userAccountId", sql.Int, req.user.AccountID)
       .query(isAdminQuery);
 
     // if user is not an admin, return an error
     if (isAdminResult.rowsAffected[0] !== 1) {
-      return res
-        .status(403)
-        .json({ message: "You do not have permission to update this group's name" });
+      return res.status(403).json({
+        message: "You do not have permission to update this group's name",
+      });
     }
 
     // update group name in the database
@@ -273,8 +258,6 @@ const editGroupName = async (req, res) => {
   }
 };
 
-
-
 const createGroup = async (req, res) => {
   try {
     // Get group details from the request body
@@ -289,24 +272,24 @@ const createGroup = async (req, res) => {
     // db connect
     const pool = await sql.connect(sqlConfig.returnServerConfig());
 
-     const query = `
+    const query = `
      INSERT INTO Groups (GroupName, GroupAvatar) 
      VALUES (@groupName, @groupAvatar); 
      SELECT SCOPE_IDENTITY() AS NewGroupID
    `;
 
-   const request = pool
-     .request()
-     .input("groupName", sql.NVarChar(50), groupName);
+    const request = pool
+      .request()
+      .input("groupName", sql.NVarChar(50), groupName);
 
-   // add groupAvatar input if it's provided
-   if (groupAvatar) {
-     request.input("groupAvatar", sql.NVarChar, groupAvatar);
-   } else{
-    request.input("groupAvatar", sql.NVarChar, groupAvatar);
-   }
+    // add groupAvatar input if it's provided
+    if (groupAvatar) {
+      request.input("groupAvatar", sql.NVarChar, groupAvatar);
+    } else {
+      request.input("groupAvatar", sql.NVarChar, groupAvatar);
+    }
 
-   const groupResult = await request.query(query);
+    const groupResult = await request.query(query);
 
     const groupId = groupResult.recordset[0].NewGroupID;
 
