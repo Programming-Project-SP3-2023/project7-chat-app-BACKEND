@@ -35,6 +35,7 @@ const currentGroups = async (req, res) => {
   }
 };
 
+
 //Add a user to a group via email
 const addMember = async (req, res) => {
   try {
@@ -132,12 +133,26 @@ const groupInfo = async (req, res) => {
             WHERE G.GroupID = @groupId
         `;
 
-    const groupInfoResult = await pool
-      .request()
-      .input("groupId", sql.Int, groupId)
-      .query(groupInfoQuery);
-    if (groupInfoResult.recordset.length === 0) {
-      return res.status(404).json({ message: "Group not found" });
+        const groupInfoResult = await pool
+            .request()
+            .input('groupId', sql.Int, groupId)
+            .query(groupInfoQuery);
+        if (groupInfoResult.recordset.length === 0) {
+            return res.status(404).json({ message: 'Group not found' });
+        }
+
+        // get group name, avatar, and member AccountIDs from the query result
+        const groupInfo = {
+            groupName: groupInfoResult.recordset[0].GroupName,
+            groupAvatar: groupInfoResult.recordset[0].GroupAvatar,
+            members: groupInfoResult.recordset.map((row) => row.AccountID),
+            
+        };
+        return res.status(200).json(groupInfo);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+
     }
 
     // get members array

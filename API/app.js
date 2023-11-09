@@ -20,6 +20,7 @@ const friendshipsRoutes = require('./routes/friendships');
 const avatarRoutes = require('./routes/avatar');
 const profileRoutes = require('./routes/profile');
 const groupsRoutes = require('./routes/groups');
+const channelsRoutes = require('./routes/channels');
 const verifyEmailRouter = require('./routes/verifyemail');
 
 
@@ -31,8 +32,8 @@ app.use('/avatar', avatarRoutes)
 app.use('/profile', profileRoutes);
 app.use('/friendships', friendshipsRoutes);
 app.use('/groups', groupsRoutes);
+app.use('/channels', channelsRoutes);
 app.use('/verifyemail', verifyEmailRouter);
-
 
 
 //export the app
