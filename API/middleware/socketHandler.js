@@ -323,6 +323,8 @@ function initialiseSockets(server, frontEndpoint) {
                 });
 
                 socket.on('callResponse', ({socketID, myPeerID}) => {
+                    console.log("got call response, redirecting peerID to other party");
+                    console.log(myPeerID);
                     socket.to(socketID).emit("callAnswered", {
                         peerID: myPeerID
                     });
