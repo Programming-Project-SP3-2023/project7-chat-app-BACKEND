@@ -159,30 +159,45 @@ const deleteChannel = async (req, res) => {
 };
 
 
-//Add member to channel
 const addMember = async (req, res) => {
     try {
-        const { channelId, memberId} = req.body;
+        const { channelId, userIdToAdd } = req.body;
+        const groupId = req.params.groupId; 
 
         const userId = req.user.AccountID;
 
+        // get the memberId for the given userIdToAdd within the current group
+        const getMemberIdQuery = `
+            SELECT MemberID
+            FROM GroupMembers
+            WHERE GroupID = @groupId
+            AND AccountID = @userIdToAdd
+        `;
+
+        const pool = await sql.connect(sqlConfig.returnServerConfig());
+        const getMemberIdResult = await pool
+            .request()
+            .input('groupId', sql.Int, groupId)
+            .input('userIdToAdd', sql.Int, userIdToAdd)
+            .query(getMemberIdQuery);
+
+        const memberId = getMemberIdResult.recordset[0]?.MemberID;
+
+        if (!memberId) {
+            return res.status(404).json({ message: 'Member not found in the group' });
+        }
         // Check if the user is an admin of the group
         const isAdminQuery = `
             SELECT 1
             FROM GroupMembers GM
-            WHERE GM.GroupID = (
-                SELECT GroupID
-                FROM Channels
-                WHERE ChannelID = @channelId
-            )
+            WHERE GM.GroupID = @groupId
             AND GM.AccountID = @userId
             AND GM.Role = 'Admin'
         `;
 
-        const pool = await sql.connect(sqlConfig.returnServerConfig());
         const isAdminResult = await pool
             .request()
-            .input('channelId', sql.Int, channelId)
+            .input('groupId', sql.Int, groupId)
             .input('userId', sql.Int, userId)
             .query(isAdminQuery);
 
@@ -190,7 +205,7 @@ const addMember = async (req, res) => {
             return res.status(403).json({ message: 'You do not have permission to add a member to this channel' });
         }
 
-        // If the user has permission, add member
+        // If the user has permission, add the member to the channel
         const addMemberQuery = `
             INSERT INTO ChannelMembers (MemberID, ChannelID)
             VALUES (@memberId, @channelId)
@@ -198,7 +213,7 @@ const addMember = async (req, res) => {
 
         await pool
             .request()
-            .input('memberId', sql.Int, userId)
+            .input('memberId', sql.Int, memberId)
             .input('channelId', sql.Int, channelId)
             .query(addMemberQuery);
 
@@ -209,31 +224,55 @@ const addMember = async (req, res) => {
     }
 };
 
+
 const removeMember = async (req, res) => {
     try {
-        const { groupId, channelId, memberId } = req.params; // Access route parameters
-        
-        // Check if the user is an admin of the group
-        const isAdminQuery = `
-            SELECT 1
+        const { channelId, userIdToRemove } = req.body;
+        const groupId = req.params.groupId;
+
+        const userId = req.user.AccountID;
+
+        // Get the memberId for the given userIdToRemove within the current group
+        const getMemberIdQuery = `
+            SELECT MemberID
             FROM GroupMembers
             WHERE GroupID = @groupId
-            AND AccountID = @userId
-            AND Role = 'Admin'
+            AND AccountID = @userIdToRemove
         `;
 
         const pool = await sql.connect(sqlConfig.returnServerConfig());
+        const getMemberIdResult = await pool
+            .request()
+            .input('groupId', sql.Int, groupId)
+            .input('userIdToRemove', sql.Int, userIdToRemove)
+            .query(getMemberIdQuery);
+
+        const memberId = getMemberIdResult.recordset[0]?.MemberID;
+
+        if (!memberId) {
+            return res.status(404).json({ message: 'Member not found in the group' });
+        }
+
+        // Check if the user is an admin of the group
+        const isAdminQuery = `
+            SELECT 1
+            FROM GroupMembers GM
+            WHERE GM.GroupID = @groupId
+            AND GM.AccountID = @userId
+            AND GM.Role = 'Admin'
+        `;
+
         const isAdminResult = await pool
             .request()
             .input('groupId', sql.Int, groupId)
-            .input('userId', sql.Int, req.user.AccountID) // Use the current user's ID
+            .input('userId', sql.Int, userId)
             .query(isAdminQuery);
 
         if (isAdminResult.rowsAffected[0] !== 1) {
             return res.status(403).json({ message: 'You do not have permission to remove a member from this channel' });
         }
 
-        // Remove the specific member from the channel
+        // If the user has permission, remove the member from the channel
         const removeMemberQuery = `
             DELETE FROM ChannelMembers
             WHERE MemberID = @memberId
@@ -242,7 +281,7 @@ const removeMember = async (req, res) => {
 
         await pool
             .request()
-            .input('memberId', sql.Int, memberId) // Use the memberId from route parameters
+            .input('memberId', sql.Int, memberId)
             .input('channelId', sql.Int, channelId)
             .query(removeMemberQuery);
 
@@ -252,6 +291,7 @@ const removeMember = async (req, res) => {
         return res.status(500).json({ message: 'Internal Server Error' });
     }
 };
+
 
 
 //List all channels within a grp
