@@ -18,6 +18,7 @@ function initialiseSockets(server, frontEndpoint) {
             socket.accountID = accountID;
             socket.username = username;
             socket.connectedGroupID = null;
+            
             if (socket.accountID && socket.username) {
                 socket.emit("connectionResponse", {
                     "response": "OK"
@@ -308,7 +309,8 @@ function initialiseSockets(server, frontEndpoint) {
                             if (rSocket && rSocket.username && rSocket.peerID) {
                                 let user = {
                                     username: rSocket.username,
-                                    peerID: rSocket.peerID
+                                    peerID: rSocket.peerID,
+                                    image: rSocket.image
                                 };
                                 currentUsers.push(user);
                             }
@@ -330,8 +332,9 @@ function initialiseSockets(server, frontEndpoint) {
                     });
                 });
 
-                socket.on('joinVC', ({channelID, peerID}) => {
+                socket.on('joinVC', ({channelID, peerID, image}) => {
                     socket.peerID = peerID;
+                    socket.image = image;
 
                     console.log(socket.id);
                     
@@ -357,7 +360,8 @@ function initialiseSockets(server, frontEndpoint) {
                         socket.to(channelID).emit("userJoinVC", {
                             socketID: socket.id,
                             peerID: socket.peerID,
-                            username: socket.username
+                            username: socket.username,
+                            image: socket.image,
                         });
                         //         }
                         //     }
