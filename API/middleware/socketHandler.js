@@ -232,6 +232,11 @@ function initialiseSockets(server, frontEndpoint) {
                             });
                         }
                     }
+                    else{
+                        socket.emit("connectChannelResponse", {
+                            "response": "Channel already connected."
+                        });
+                    }
                 });
 
 
