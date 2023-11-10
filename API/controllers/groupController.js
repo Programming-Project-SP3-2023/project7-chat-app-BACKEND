@@ -303,9 +303,39 @@ const createGroup = async (req, res) => {
         "INSERT INTO GroupMembers (AccountID, GroupID, Role) VALUES (@creatorAccountId, @groupId, @role)"
       );
 
-    return res
-      .status(201)
-      .json({ message: "Group created successfully", groupID: groupId });
+      //make two channels: Meetings(Voice) and General chat (Chat)
+      const createChannel = async (channelName, channelType) => {
+        const createChannelQuery = `
+          INSERT INTO Channels (GroupID, ChannelType, Visibility, ChannelName)
+          VALUES (@groupId, @channelType, 'Public', @channelName);
+          SELECT SCOPE_IDENTITY() AS NewChannelID;
+        `;
+  
+        const channelCreationResult = await pool
+          .request()
+          .input("groupId", sql.Int, groupId)
+          .input("channelType", sql.NVarChar(50), channelType)
+          .input("channelName", sql.NVarChar(100), channelName)
+          .query(createChannelQuery);
+  
+        return channelCreationResult.recordset[0].NewChannelID;
+      };
+  
+      // Create Meetings (Voice) channel
+      const meetingsChannelId = await createChannel("Meetings", "Voice");
+  
+      // Create General chat (Chat) channel
+      const generalChatChannelId = await createChannel("General chat", "Chat");
+  
+      return res
+        .status(201)
+        .json({
+          message: "Group created successfully",
+          groupID: groupId,
+          meetingsChannelID: meetingsChannelId, 
+          generalChatChannelID: generalChatChannelId, 
+        });
+
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server error" });

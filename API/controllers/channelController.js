@@ -40,10 +40,11 @@ const createChannel = async (req, res) => {
     // create the channel
     const createChannelQuery = `
             INSERT INTO Channels (GroupID, ChannelType, Visibility, ChannelName)
-            VALUES (@groupId, @channelType, @visibility, @channelName)
+            VALUES (@groupId, @channelType, @visibility, @channelName);
+            SELECT SCOPE_IDENTITY() AS ChannelID;
         `;
 
-    await pool
+    const createChannelResult = await pool
       .request()
       .input("groupId", sql.Int, groupId)
       .input("channelType", sql.VarChar(50), channelType)
@@ -51,7 +52,13 @@ const createChannel = async (req, res) => {
       .input("channelName", sql.VarChar(100), channelName)
       .query(createChannelQuery);
 
-    return res.status(201).json({ message: "Channel created successfully" });
+    if (!createChannelResult.recordset || createChannelResult.recordset.length === 0) {
+      return res.status(500).json({ message: "Failed to create the channel" });
+    }
+  
+    const channelId = createChannelResult.recordset[0].ChannelID;
+
+    return res.status(201).json({ message: "Channel created successfully", channelId });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal Server Error" });
