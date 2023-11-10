@@ -32,12 +32,9 @@ const createChannel = async (req, res) => {
       .query(isAdminQuery);
 
     if (isAdminResult.rowsAffected[0] !== 1) {
-      return res
-        .status(403)
-        .json({
-          message:
-            "You do not have permission to create a channel in this group",
-        });
+      return res.status(403).json({
+        message: "You do not have permission to create a channel in this group",
+      });
     }
 
     // create the channel
@@ -90,11 +87,9 @@ const updateChannelName = async (req, res) => {
       .query(isAdminQuery);
 
     if (isAdminResult.rowsAffected[0] !== 1) {
-      return res
-        .status(403)
-        .json({
-          message: "You do not have permission to change the channel name",
-        });
+      return res.status(403).json({
+        message: "You do not have permission to change the channel name",
+      });
     }
 
     // Update the channel name in the database
@@ -150,6 +145,13 @@ const deleteChannel = async (req, res) => {
         .status(403)
         .json({ message: "You do not have permission to delete this channel" });
     }
+
+    //delete all channel members from the channel table
+    const deleteChannelMembersQuery = `DELETE FROM ChannelMembers WHERE ChannelID = @channelId`;
+    await pool
+      .request()
+      .input("channelId", sql.Int, channelId)
+      .query(deleteChannelMembersQuery);
 
     // If the user is an admin of the group, delete the channel
     const deleteChannelQuery = `
@@ -211,11 +213,9 @@ const addMember = async (req, res) => {
       .query(isAdminQuery);
 
     if (isAdminResult.rowsAffected[0] !== 1) {
-      return res
-        .status(403)
-        .json({
-          message: "You do not have permission to add a member to this channel",
-        });
+      return res.status(403).json({
+        message: "You do not have permission to add a member to this channel",
+      });
     }
 
     // If the user has permission, add the member to the channel
@@ -241,7 +241,8 @@ const addMember = async (req, res) => {
 
 const removeMember = async (req, res) => {
   try {
-    const { channelId, userIdToRemove } = req.body;
+    const channelId = req.params.channelId;
+    const userIdToRemove = req.params.userId;
     const groupId = req.params.groupId;
 
     const userId = req.user.AccountID;
@@ -283,12 +284,10 @@ const removeMember = async (req, res) => {
       .query(isAdminQuery);
 
     if (isAdminResult.rowsAffected[0] !== 1) {
-      return res
-        .status(403)
-        .json({
-          message:
-            "You do not have permission to remove a member from this channel",
-        });
+      return res.status(403).json({
+        message:
+          "You do not have permission to remove a member from this channel",
+      });
     }
     console.log(memberId);
     // If the user has permission, remove the member from the channel
