@@ -92,10 +92,10 @@ const deleteAccount = async (req, res) => {
             AddresseeID = ${req.body.AccountID}`);
 
             //delete Messages table
-            for(var i=0; i<result.recordsets; i++){
+            for(var i=0; i<result.rowsAffected; i++){
                 result = await sql.query
                 (`DELETE FROM Messages
-                WHERE ChatID = ${result.recordsets[i]}`);
+                WHERE ChatID = ${result.recordsets[0][i]}`);
             }
 
             //delete friendships table
