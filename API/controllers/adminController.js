@@ -84,6 +84,46 @@ const deleteAccount = async (req, res) => {
             var result = await sql.query
             (`DELETE FROM Logins WHERE AccountID = '${req.body.AccountID}'`);
 
+            //get all friendship IDs table
+            result = await sql.query
+            (`SELECT FriendshipID FROM Friendships
+            WHERE RequesterID = ${req.body.AccountID}
+            OR
+            AddresseeID = ${req.body.AccountID}`);
+
+
+            //delete from Messages table
+            for(var i=0; i<result.rowsAffected; i++){
+                console.log(result.recordsets[0][i].FriendshipID);
+
+                result = await sql.query
+                (`DELETE FROM Messages
+                WHERE ChatID = ${result.recordsets[0][i].FriendshipID}`);
+            }
+
+            //delete from friendships table
+            result = await sql.query
+            (`DELETE FROM Friendships
+            WHERE RequesterID = ${req.body.AccountID}
+            OR
+            AddresseeID = ${req.body.AccountID}`);
+
+            //delete from ChannelMembers table
+            result = await sql.query
+            (`DELETE FROM ChannelMembers
+            WHERE MemberID = ${req.body.AccountID}`);
+
+            //delete from channelMessages table
+            result = await sql.query
+            (`DELETE FROM ChannelMessages
+            WHERE SenderID = ${req.body.AccountID}`);
+
+            //delete from GroupMembers table
+            result = await sql.query
+            (`DELETE FROM GroupMembers
+            WHERE AccountID = ${req.body.AccountID}`);
+
+            //delete from Accounts table
             result = await sql.query
             (`DELETE FROM Accounts WHERE AccountID = '${req.body.AccountID}'`);
 
@@ -111,6 +151,8 @@ const deleteAccount = async (req, res) => {
 const changePassword = async (req, res) => {
     try{
         //encrypt the users password
+        console.log(req.body.AccountID);
+        console.log(req.body.password);
         const saltRounds = 10;
         let hashedPassword = null;
         bcrypt.genSalt(saltRounds, function(err, salt){
