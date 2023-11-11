@@ -115,7 +115,7 @@ const deleteAccount = async (req, res) => {
 
             //delete from channelMessages table
             result = await sql.query
-            (`DELETE FROM ChannelMembers
+            (`DELETE FROM ChannelMessages
             WHERE SenderID = ${req.body.AccountID}`);
 
             //delete from GroupMembers table
