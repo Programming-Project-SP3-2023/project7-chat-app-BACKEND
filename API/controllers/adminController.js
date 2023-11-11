@@ -84,6 +84,43 @@ const deleteAccount = async (req, res) => {
             var result = await sql.query
             (`DELETE FROM Logins WHERE AccountID = '${req.body.AccountID}'`);
 
+            //get all friendship IDs table
+            result = await sql.query
+            (`SELECT FriendshipID FROM Friendships
+            WHERE RequesterID = ${req.body.AccountID}
+            OR
+            AddresseeID = ${req.body.AccountID}`);
+
+            //delete Messages table
+            for(var i=0; i<result.recordsets; i++){
+                result = await sql.query
+                (`DELETE FROM Messages
+                WHERE ChatID = ${result.recordsets[i]}`);
+            }
+
+            //delete friendships table
+            result = await sql.query
+            (`DELETE FROM Friendships
+            WHERE RequesterID = ${req.body.AccountID}
+            OR
+            AddresseeID = ${req.body.AccountID}`);
+
+            //delete from ChannelMembers table
+            result = await sql.query
+            (`DELETE FROM ChannelMembers
+            WHERE MemberID = ${req.body.AccountID}`);
+
+            //delete channelMessages table
+            result = await sql.query
+            (`DELETE FROM ChannelMembers
+            WHERE SenderID = ${req.body.AccountID}`);
+
+            //delete from GroupMembers table
+            result = await sql.query
+            (`DELETE FROM GroupMembers
+            WHERE SenderID = ${req.body.AccountID}`);
+
+            //delete from Accounts table
             result = await sql.query
             (`DELETE FROM Accounts WHERE AccountID = '${req.body.AccountID}'`);
 
