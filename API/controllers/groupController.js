@@ -303,7 +303,7 @@ const createGroup = async (req, res) => {
         "INSERT INTO GroupMembers (AccountID, GroupID, Role) VALUES (@creatorAccountId, @groupId, @role)"
       );
 
-      //make two channels: Meetings(Voice) and General chat (Chat)
+      //make two channels: Meetings(Voice) and General Chat (Chat)
       const createChannel = async (channelName, channelType) => {
         const createChannelQuery = `
           INSERT INTO Channels (GroupID, ChannelType, Visibility, ChannelName)
@@ -325,7 +325,7 @@ const createGroup = async (req, res) => {
       const meetingsChannelId = await createChannel("Meetings", "Voice");
   
       // Create General chat (Chat) channel
-      const generalChatChannelId = await createChannel("General chat", "Chat");
+      const generalChatChannelId = await createChannel("General Chat", "Chat");
   
       return res
         .status(201)
