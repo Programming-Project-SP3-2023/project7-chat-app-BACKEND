@@ -18,7 +18,7 @@ function initialiseSockets(server, frontEndpoint) {
             socket.accountID = accountID;
             socket.username = username;
             socket.connectedGroupID = null;
-            
+
             if (socket.accountID && socket.username) {
                 socket.emit("connectionResponse", {
                     "response": "OK"
@@ -211,33 +211,35 @@ function initialiseSockets(server, frontEndpoint) {
 
 
                 socket.on("connectChannel", async ({ channelID }) => {
-                    console.log("received connection req for " +channelID)
-                    console.log("groupID is " +socket.connectedGroupID)
-                    if (!socket.rooms.has(channelID)) {
-                        try {
-                            const validChannel = await chatData.isValidChannelID(channelID, socket.connectedGroupID, socket.accountID);
-                            console.log(validChannel)
-                            if (validChannel) {
-                                console.log("socket not already in group room, joining room");
-                                socket.join(channelID);
+                    if (channelID) {
+                        console.log("received connection req for " + channelID)
+                        console.log("groupID is " + socket.connectedGroupID)
+                        if (!socket.rooms.has(channelID)) {
+                            try {
+                                const validChannel = await chatData.isValidChannelID(channelID, socket.connectedGroupID, socket.accountID);
+                                console.log(validChannel)
+                                if (validChannel) {
+                                    console.log("socket not already in group room, joining room");
+                                    socket.join(channelID);
+                                    socket.emit("connectChannelResponse", {
+                                        "response": "OK"
+                                    });
+                                } else {
+                                    socket.emit("error", {
+                                        "error": "Channel not valid or user does not have permission to view."
+                                    });
+                                }
+                            } catch (err) {
                                 socket.emit("connectChannelResponse", {
-                                    "response": "OK"
-                                });
-                            } else {
-                                socket.emit("error", {
-                                    "error": "Channel not valid or user does not have permission to view."
+                                    "response": "Error joining channel"
                                 });
                             }
-                        } catch (err) {
+                        }
+                        else {
                             socket.emit("connectChannelResponse", {
-                                "response": "Error joining channel"
+                                "response": "Channel already connected."
                             });
                         }
-                    }
-                    else{
-                        socket.emit("connectChannelResponse", {
-                            "response": "Channel already connected."
-                        });
                     }
                 });
 
@@ -301,16 +303,16 @@ function initialiseSockets(server, frontEndpoint) {
 
                 //VOIP Channels
 
-                socket.on('getCurrentUsers', async ({channelID}) => {
-                    console.log("getting users in channel " +channelID);
+                socket.on('getCurrentUsers', async ({ channelID }) => {
+                    console.log("getting users in channel " + channelID);
                     console.log(io.sockets.adapter.rooms.get(channelID))
                     const currentUsers = [];
                     let roomSockets = io.sockets.adapter.rooms.get(channelID);
 
-                    if(roomSockets){
+                    if (roomSockets) {
                         let socketArray = Array.from(roomSockets);
 
-                        for (let socketID of socketArray){
+                        for (let socketID of socketArray) {
                             let rSocket = io.sockets.sockets.get(socketID);
                             console.log(rSocket.username);
                             if (rSocket && rSocket.username && rSocket.peerID) {
@@ -331,7 +333,7 @@ function initialiseSockets(server, frontEndpoint) {
 
                 });
 
-                socket.on('callResponse', ({socketID, myPeerID}) => {
+                socket.on('callResponse', ({ socketID, myPeerID }) => {
                     console.log("got call response, redirecting peerID to other party");
                     console.log(myPeerID);
                     socket.to(socketID).emit("callAnswered", {
@@ -339,12 +341,12 @@ function initialiseSockets(server, frontEndpoint) {
                     });
                 });
 
-                socket.on('joinVC', ({channelID, peerID, image}) => {
+                socket.on('joinVC', ({ channelID, peerID, image }) => {
                     socket.peerID = peerID;
                     socket.image = image;
 
                     console.log(socket.id);
-                    
+
                     // console.log(socket.rooms);
                     // console.log(socket.accountID);
                     // console.log(channelID);
@@ -360,9 +362,9 @@ function initialiseSockets(server, frontEndpoint) {
 
 
 
-                         socket.emit("updateVCStatus", {
-                             "response": "joined channel"
-                         });
+                        socket.emit("updateVCStatus", {
+                            "response": "joined channel"
+                        });
                         //announce to all members of voice chat of the user joining and ask them to connect
                         socket.to(channelID).emit("userJoinVC", {
                             socketID: socket.id,
@@ -385,7 +387,7 @@ function initialiseSockets(server, frontEndpoint) {
                     }
                 });
 
-                socket.on('leaveVC', ({channelID}) => {
+                socket.on('leaveVC', ({ channelID }) => {
                     console.log("Leaving: " + channelID);
                     console.log(socket.rooms);
                     if (socket.rooms.has(channelID)) {
