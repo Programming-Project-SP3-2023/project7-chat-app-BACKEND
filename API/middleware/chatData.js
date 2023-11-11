@@ -178,10 +178,8 @@ async function isValidChannelID(channelID, groupID, accountID) {
         }
 
         const connection = await sql.connect(sqlConfig.returnServerConfig());
-        const query = `SELECT Channels.ChannelID FROM Channels 
-        INNER JOIN ChannelMembers ON Channels.ChannelID = ChannelMembers.ChannelID INNER JOIN GroupMembers ON ChannelMembers.MemberID = GroupMembers.MemberID 
-        WHERE Channels.GroupID = ${groupID} AND GroupMembers.AccountID = ${accountID} AND Channels.ChannelID = ${channelID}
-        OR Channels.Visibility = 'Public'`;
+        const query = `SELECT Channels.ChannelID FROM Channels  
+        WHERE Channels.GroupID = ${groupID} AND Channels.ChannelID = ${channelID}`;
         const result = await connection.query(query);
 
         console.log(result.rowsAffected);

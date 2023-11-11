@@ -211,6 +211,8 @@ function initialiseSockets(server, frontEndpoint) {
 
 
                 socket.on("connectChannel", async ({ channelID }) => {
+                    console.log("received connection req for " +channelID)
+                    console.log("groupID is " +socket.connectedGroupID)
                     if (!socket.rooms.has(channelID)) {
                         try {
                             const validChannel = await chatData.isValidChannelID(channelID, socket.connectedGroupID, socket.accountID);

@@ -320,12 +320,13 @@ const createGroup = async (req, res) => {
   
         return channelCreationResult.recordset[0].NewChannelID;
       };
-  
+
+
+      // Create General chat (Chat) channel
+      const generalChatChannelId = await createChannel("General Chat", "Chat");
       // Create Meetings (Voice) channel
       const meetingsChannelId = await createChannel("Meetings", "Voice");
   
-      // Create General chat (Chat) channel
-      const generalChatChannelId = await createChannel("General Chat", "Chat");
   
       return res
         .status(201)
