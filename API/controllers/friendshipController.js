@@ -8,6 +8,11 @@ const chatData = require('../middleware/chatData');
 //sends a friend request
 function sendRequest(requesterID, requesteeID, res){
     try{
+        if(requesteeID == requesteeID){
+            return res.status(401).json({
+                Message: "You can't add yourself as a friend"
+            })
+        }
         sql.connect(sqlConfig.returnServerConfig()).then(async function(){
             const existingFriendship = await checkForExistingFriendships(requesterID, requesteeID);
 
