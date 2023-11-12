@@ -76,14 +76,28 @@ async function deleteFriendship(currentUserID, otherUserID, res){
  
         //check if friendship exists
         if(existingFriendship){
-            //Delete a friendship or friendship request that has been sent by another user.
             sql.connect(sqlConfig.returnServerConfig()).then(async function(){
-                const result = await sql.query`DELETE FROM Friendships
+                //select the friendship ID
+                const friendShipQuery = result = await sql.query(`Select TOP 1 * FROM Friendships
+                Where RequesterID = ${currentUserID}
+                AND AddresseeID = ${otherUserID}
+                
+                OR RequesterID = ${otherUserID} 
+                AND AddresseeID = ${currentUserID}`);
+
+                //delete all messages from the messages table for that friendship
+                var result = await sql.query
+                (`DELETE FROM Messages
+                WHERE ChatID = ${friendShipQuery.recordset[0].FriendshipID}`);
+
+                //Delete a friendship or friendship request that has been sent by another user.
+                result = await sql.query`DELETE FROM Friendships
                                             WHERE RequesterID = ${otherUserID}
                                             AND AddresseeID = ${currentUserID}
                                             OR
                                             AddresseeID = ${otherUserID}
                                             AND RequesterID = ${currentUserID}`
+
                 return res.status(200).json({
                     Message: "OK"
                 })
