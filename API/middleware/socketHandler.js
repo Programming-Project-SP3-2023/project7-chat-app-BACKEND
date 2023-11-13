@@ -51,6 +51,7 @@ function initialiseSockets(server, frontEndpoint) {
 
         socket.on("getOnlineFriends", async () => {
             //this notifies the socket of all friends currently online
+            if(socket.accountID){
             const friends = [];
             const friendshipPromises = [];
             //grab all connections as globalsocket
@@ -80,35 +81,55 @@ function initialiseSockets(server, frontEndpoint) {
                 console.log(friends[i]);
             }
             socket.emit("onlineFriends", friends);
+        }
         })
 
 
         //if chat already connected, just get history
         //connect with chatID (should have from friendships)
         socket.on("connectChat", ({ chatID }) => {
-            //join chat if not already joined
-            console.log("checking chatid" + chatID);
-            if (!socket.rooms.has(chatID)) {
-                isValidID = chatData.isValidChatID(chatID, socket.accountID)
-                console.log("we're in the isvalid method now vaid is " + isValidID)
-                if (isValidID) {
-                    console.log("socket not already in room, joining room");
-                    socket.join(chatID);
-                }
-                else {
+            if(socket.accountID){
+                console.log(String(chatID).length);
+                if(!String(chatID).includes(String(socket.accountID))){
                     socket.emit("error", {
                         "error": "ChatID not valid"
                     });
+                    return;
                 }
+                if(String(chatID).length != 8){
+
+
+                }
+
+            //join chat if not already joined
+            console.log("checking chatid" + chatID);
+            if (!socket.rooms.has(chatID)) {
+                isValid = chatData.isValidChatID(chatID, socket.accountID)
+                    console.log("we're in the isvalid method now vaid is " + isValid)
+                    if (isValid) {
+                        console.log("socket not already in room, joining room");
+                        socket.join(chatID);
+                    }
+                    else {
+                        socket.emit("error", {
+                            "error": "ChatID not valid"
+                        });
+                    }
+
+                
+
             }
             if (socket.rooms.has(chatID)) {
                 socket.emit("connectChatResponse", {
                     "response": "OK"
                 });
             }
+        }
         });
 
         socket.on("getMessages", ({ chatID }) => {
+            if(socket.accountID){
+
             console.log("checking messages for " + chatID)
             if (socket.rooms.has(chatID)) {
                 console.log("socket in room, grabbing history");
@@ -125,9 +146,12 @@ function initialiseSockets(server, frontEndpoint) {
                     "error": "Fail - Socket is not connected to the chat specified."
                 });
             }
+        }
         });
         //request top X messages from database
         socket.on("moreMessages", ({ chatID, num }) => {
+            if(socket.accountID){
+
             if (socket.rooms.has(chatID)) {
                 console.log("socket in room, grabbing history");
 
@@ -143,9 +167,18 @@ function initialiseSockets(server, frontEndpoint) {
                     "error": "Fail - Socket is not connected to the chat specified."
                 });
             }
+        }
         });
 
         socket.on("sendMessage", ({ chatID, message }) => {
+            if(socket.accountID){
+
+            if(message.length > 50){
+                socket.emit("error", {
+                    "error": "Fail - Message too long."
+                });
+                return;
+            }
             let timestamp = new Date().getTime();
 
             if (socket.rooms.has(chatID)) {
@@ -161,9 +194,12 @@ function initialiseSockets(server, frontEndpoint) {
                     "error": "Fail - Socket is not connected to the chat specified."
                 });
             }
+        }
         });
 
         socket.on('disconnect', () => {
+            if(socket.accountID){
+
             for (let [accountID, globalSocket] of io.of("/").sockets) {
                 console.log(socket.accountID + " and " + globalSocket.accountID)
                 if (globalSocket.accountID) {
@@ -180,11 +216,13 @@ function initialiseSockets(server, frontEndpoint) {
 
                 }
             }
+        }
         });
 
         //group sockets
 
         socket.on("connectGroup", async ({ groupID }) => {
+            if(socket.accountID){
 
             //checks two things:
             //1. is this a real group ID? and
@@ -211,6 +249,8 @@ function initialiseSockets(server, frontEndpoint) {
 
 
                 socket.on("connectChannel", async ({ channelID }) => {
+                    if(socket.accountID){
+
                     if (channelID) {
                         console.log("received connection req for " + channelID)
                         console.log("groupID is " + socket.connectedGroupID)
@@ -241,11 +281,14 @@ function initialiseSockets(server, frontEndpoint) {
                             });
                         }
                     }
+                }
                 });
 
 
 
                 socket.on("getChannelMessages", ({ channelID }) => {
+                    if(socket.accountID){
+
                     console.log("checking messages for " + channelID)
                     if (socket.rooms.has(channelID)) {
                         console.log("socket in room, grabbing history");
@@ -262,9 +305,12 @@ function initialiseSockets(server, frontEndpoint) {
                             "error": "Fail - Socket is not connected to the chat specified."
                         });
                     }
+                }
                 });
                 //request top X messages from database
                 socket.on("moreChannelMessages", ({ channelID, num }) => {
+                    if(socket.accountID){
+
                     if (socket.rooms.has(channelID)) {
                         console.log("socket in room, grabbing history");
 
@@ -280,9 +326,18 @@ function initialiseSockets(server, frontEndpoint) {
                             "error": "Fail - Socket is not connected to the chat specified."
                         });
                     }
+                }
                 });
 
                 socket.on("sendChannelMessage", ({ channelID, message }) => {
+                    if(socket.accountID){
+
+                    if(message.length > 50){
+                        socket.emit("error", {
+                            "error": "Fail - Message too long."
+                        });
+                        return;
+                    }
                     let timestamp = new Date().getTime();
 
                     if (socket.rooms.has(channelID)) {
@@ -298,12 +353,15 @@ function initialiseSockets(server, frontEndpoint) {
                             "error": "Fail - Socket is not connected to the channel specified."
                         });
                     }
+                }
                 });
 
 
                 //VOIP Channels
 
                 socket.on('getCurrentUsers', async ({ channelID }) => {
+                    if(socket.accountID){
+
                     console.log("getting users in channel " + channelID);
                     console.log(io.sockets.adapter.rooms.get(channelID))
                     const currentUsers = [];
@@ -329,19 +387,24 @@ function initialiseSockets(server, frontEndpoint) {
                     console.log(currentUsers);
                     socket.emit("currentUsers", (currentUsers));
 
-
+                }
 
                 });
 
                 socket.on('callResponse', ({ socketID, myPeerID }) => {
+                    if(socket.accountID){
+
                     console.log("got call response, redirecting peerID to other party");
                     console.log(myPeerID);
                     socket.to(socketID).emit("callAnswered", {
                         peerID: myPeerID
                     });
+                }
                 });
 
                 socket.on('joinVC', ({ channelID, peerID, image }) => {
+                    if(socket.accountID){
+
                     socket.peerID = peerID;
                     socket.image = image;
 
@@ -385,9 +448,12 @@ function initialiseSockets(server, frontEndpoint) {
                             "error": "VC already connected."
                         });
                     }
+                }
                 });
 
                 socket.on('leaveVC', ({ channelID }) => {
+                    if(socket.accountID){
+
                     console.log("Leaving: " + channelID);
                     console.log(socket.rooms);
                     if (socket.rooms.has(channelID)) {
@@ -402,9 +468,12 @@ function initialiseSockets(server, frontEndpoint) {
                     } else {
                         console.log("room not found");
                     }
+                }
                 });
 
                 socket.on('switchVC', ({ channelID, newChannelID }) => {
+                    if(socket.accountID){
+
                     if (socket.rooms.has(channelID)) {
                         isValidID = chatData.isValidChannelID(newChannelID)
                         if (isValidID) {
@@ -435,6 +504,7 @@ function initialiseSockets(server, frontEndpoint) {
                             "error": "VC not connected."
                         });
                     }
+                }
                 });
 
 
@@ -448,7 +518,7 @@ function initialiseSockets(server, frontEndpoint) {
             }
 
 
-
+        }
 
         });
 
@@ -457,7 +527,7 @@ function initialiseSockets(server, frontEndpoint) {
         });
 
 
-
+    
     });
 
 }
