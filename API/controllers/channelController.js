@@ -52,13 +52,21 @@ const createChannel = async (req, res) => {
       .input("channelName", sql.VarChar(100), channelName)
       .query(createChannelQuery);
 
-    if (!createChannelResult.recordset || createChannelResult.recordset.length === 0) {
+    if (
+      !createChannelResult.recordset ||
+      createChannelResult.recordset.length === 0
+    ) {
       return res.status(500).json({ message: "Failed to create the channel" });
     }
-  
+
     const channelId = createChannelResult.recordset[0].ChannelID;
 
-    return res.status(201).json({ message: "Channel created successfully", channelId });
+    console.log("channelId....", channelId);
+
+    return res.status(201).json({
+      message: "Channel created successfully",
+      channelId: channelId,
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal Server Error" });
@@ -372,9 +380,9 @@ const channelInfo = async (req, res) => {
     const channel = channelInfoResult.recordset[0];
 
     // Check if the channel is private
-    if (channel.Visibility === "Private") {
-      // If the channel is private, query to retrieve a list of members
-      const channelMembersQuery = `
+
+    // If the channel is private, query to retrieve a list of members
+    const channelMembersQuery = `
                 SELECT GM.AccountID, GM.Role, A.DisplayName, A.Avatar
                 FROM ChannelMembers CM
                 JOIN GroupMembers GM ON CM.MemberID = GM.MemberID
@@ -382,21 +390,20 @@ const channelInfo = async (req, res) => {
                 WHERE CM.ChannelID = @channelId
             `;
 
-      const channelMembersResult = await pool
-        .request()
-        .input("channelId", sql.Int, channelId)
-        .query(channelMembersQuery);
+    const channelMembersResult = await pool
+      .request()
+      .input("channelId", sql.Int, channelId)
+      .query(channelMembersQuery);
 
-      const members = channelMembersResult.recordset.map((member) => ({
-        memberId: member.AccountID,
-        memberName: member.DisplayName,
-        memberRole: member.Role,
-        memberAvatar: member.Avatar,
-      }));
+    const members = channelMembersResult.recordset.map((member) => ({
+      memberId: member.AccountID,
+      memberName: member.DisplayName,
+      memberRole: member.Role,
+      memberAvatar: member.Avatar,
+    }));
 
-      // Add the list of members to the channel object
-      channel.members = members;
-    }
+    // Add the list of members to the channel object
+    channel.members = members;
 
     return res.status(200).json(channel);
   } catch (error) {
