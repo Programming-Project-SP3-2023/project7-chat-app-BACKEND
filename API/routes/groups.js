@@ -6,13 +6,25 @@ const authenticateToken = require('../middleware/authenticateToken');
 
 const { groupInfo, addMember, removeMember, createGroup, deleteGroup, currentGroups, editGroupName } = require('../controllers/groupController');
 
-//get group info
+//get all current groups the user is a member of
 router.get('/current-groups', authenticateToken, currentGroups);
+
+//get a specific group by group ID
 router.get('/:groupId', groupInfo);
+
+//add a member to a group
 router.post('/add-member', authenticateToken, addMember);
+
+//remove a member from a group
 router.post('/remove-member', authenticateToken, removeMember);
+
+//create a new group
 router.post('/create', authenticateToken, createGroup);
+
+//delete a group
 router.delete('/delete/:groupId', authenticateToken, deleteGroup);
+
+//edit a group name
 router.post('/edit-name/:groupId', authenticateToken, editGroupName);
 
 
