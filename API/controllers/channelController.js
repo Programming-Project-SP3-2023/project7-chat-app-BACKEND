@@ -396,10 +396,10 @@ const channelInfo = async (req, res) => {
       .query(channelMembersQuery);
 
     const members = channelMembersResult.recordset.map((member) => ({
-      memberId: member.AccountID,
-      memberName: member.DisplayName,
-      memberRole: member.Role,
-      memberAvatar: member.Avatar,
+      MemberId: member.AccountID,
+      MemberName: member.DisplayName,
+      MemberRole: member.Role,
+      avatar: member.Avatar,
     }));
 
     // Add the list of members to the channel object
