@@ -217,6 +217,10 @@ function initialiseSockets(server, frontEndpoint) {
                 }
             }
         }
+        const lastToDisconnect = io.of("/").sockets.size === 0;
+        if (lastToDisconnect) {
+          gc();
+        }
         });
 
         //group sockets
