@@ -246,7 +246,14 @@ function initialiseSockets(server, frontEndpoint) {
                 }
 
                 socket.connectedGroupID = groupID;
-
+            }
+            else{
+                socket.emit("error", {
+                    "error": "GroupID not valid or user not in group."
+                });
+            }
+        }
+    });
 
                 socket.on("connectChannel", async ({ channelID }) => {
                     if(socket.accountID){
@@ -506,21 +513,6 @@ function initialiseSockets(server, frontEndpoint) {
                     }
                 }
                 });
-
-
-
-
-            }
-            else {
-                socket.emit("error", {
-                    "error": "Invalid Group ID or permissions insufficient"
-                })
-            }
-
-
-        }
-
-        });
 
         socket.on("disconnectGroup", () => {
             socket.connectedGroupID = null;
