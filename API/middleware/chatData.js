@@ -225,7 +225,9 @@ async function getChannelMessageHistory(channelID, num) {
             let messages = null;
             sql.connect(sqlConfig.returnServerConfig()).then(async function () {
 
-                const result = await sql.query('SELECT TOP ' + num + ' * FROM ChannelMessages WHERE ChannelID = \'' + channelID + '\' ORDER BY TimeSent DESC');
+                const result = await sql.query(`SELECT TOP ${num} ChannelMessageID, ChannelID, MessageBody, SenderID, TimeSent, Accounts.DisplayName as "SenderUsername"  FROM ChannelMessages 
+                JOIN Accounts on ChannelMessages.SenderID = Accounts.AccountID
+                WHERE ChannelID = ${channelID} ORDER BY TimeSent DESC`);
                 messages = result.recordsets;
                 resolve(messages);
 
