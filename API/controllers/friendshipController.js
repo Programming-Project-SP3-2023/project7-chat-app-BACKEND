@@ -8,7 +8,7 @@ const chatData = require('../middleware/chatData');
 //sends a friend request
 function sendRequest(requesterID, requesteeID, res){
     try{
-        if(requesteeID == requesteeID){
+        if(requesteeID == requesterID){
             return res.status(401).json({
                 Message: "You can't add yourself as a friend"
             })
