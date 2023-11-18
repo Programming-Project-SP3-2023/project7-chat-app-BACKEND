@@ -36,7 +36,7 @@ function sendVerificationEmail(email, emailToken) {
         attachments: [
             {
                 filename: 'Echo_Logo.png',
-                path: '../assets/Echo_Logo.png', 
+                path: './API/assets/Echo_Logo.png', 
                 cid: 'echo-logo' 
             }
         ]
