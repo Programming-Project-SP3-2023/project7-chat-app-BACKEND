@@ -351,6 +351,7 @@ function initialiseSockets(server, frontEndpoint) {
                         socket.to(channelID).emit("channelMessageResponse", {
                             message,
                             from: socket.accountID,
+                            username: socket.username,
                             timestamp: timestamp,
                         });
                         chatData.saveChannelMessage(message, socket.accountID, timestamp, channelID);
