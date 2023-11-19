@@ -350,7 +350,7 @@ function initialiseSockets(server, frontEndpoint) {
                     if (socket.rooms.has(channelID)) {
                         socket.to(channelID).emit("channelMessageResponse", {
                             message,
-                            from: socket.username,
+                            from: socket.accountID,
                             timestamp: timestamp,
                         });
                         chatData.saveChannelMessage(message, socket.accountID, timestamp, channelID);
