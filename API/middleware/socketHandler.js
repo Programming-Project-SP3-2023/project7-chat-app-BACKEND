@@ -324,7 +324,7 @@ function initialiseSockets(server, frontEndpoint) {
                         //grab top 10 message history for this chat
                         chatData.getChannelMessageHistory(channelID, num).then(messages => {
                             console.log(messages);
-                            socket.emit("channelMessageHistory", messages);
+                            socket.emit("messageHistory", messages);
                         });
 
                     }
