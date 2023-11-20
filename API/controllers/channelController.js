@@ -4,6 +4,7 @@ const sqlConfig = require("../config");
 const { stringify } = require("querystring");
 const authenticateToken = require("../middleware/authenticateToken");
 const router = express.Router();
+const MAXIMUM_CHANNELS_PER_GROUP = 10;
 
 //If visibility is public no add/remove from channel
 //Add/remove are only for private channel
@@ -34,6 +35,26 @@ const createChannel = async (req, res) => {
     if (isAdminResult.rowsAffected[0] !== 1) {
       return res.status(403).json({
         message: "You do not have permission to create a channel in this group",
+      });
+    }
+    // Check how many channels the group has
+    const groupChannelCountQuery = `
+            SELECT COUNT(*) AS ChannelCount
+            FROM Channels
+            WHERE GroupID = @groupId
+        `;
+
+    const groupChannelCountResult = await pool
+      .request()
+      .input("groupId", sql.Int, groupId)
+      .query(groupChannelCountQuery);
+
+    const groupChannelCount = groupChannelCountResult.recordset[0].ChannelCount;
+
+    // Check the max channels to see if they're at the limit
+    if (groupChannelCount >= MAXIMUM_CHANNELS_PER_GROUP) {
+      return res.status(400).json({
+        message: `The group has reached the maximum limit of ${MAXIMUM_CHANNELS_PER_GROUP} channels.`,
       });
     }
 
