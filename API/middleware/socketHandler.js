@@ -184,7 +184,7 @@ function initialiseSockets(server, frontEndpoint) {
             if (socket.rooms.has(chatID)) {
                 socket.to(chatID).emit("messageResponse", {
                     message,
-                    from: socket.username,
+                    from: socket.accountID,
                     timestamp: timestamp,
                 });
                 chatData.saveMessage(message, socket.accountID, timestamp, chatID);
