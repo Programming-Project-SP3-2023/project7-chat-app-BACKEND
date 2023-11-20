@@ -4,6 +4,7 @@ const sqlConfig = require("../config");
 const { stringify } = require("querystring");
 const authenticateToken = require("../middleware/authenticateToken");
 const router = express.Router();
+const MAXIMUM_GROUPS_PER_USER = 5;
 
 //Return list of group IDs for a user
 
@@ -57,6 +58,26 @@ const addMember = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
     const accountId = userResult.recordset[0].AccountID;
+
+    // Check how many groups the user is part of
+    const userGroupCountQuery = `
+        SELECT COUNT(*) AS GroupCount
+        FROM GroupMembers
+        WHERE AccountID = @accountId
+        `;
+    const userGroupCountResult = await pool
+      .request()
+      .input("accountId", sql.Int, accountId)
+      .query(userGroupCountQuery);
+
+    const userGroupCount = userGroupCountResult.recordset[0].GroupCount;
+
+    // Check if the user has reached the maximum group limit
+    if (userGroupCount >= MAXIMUM_GROUPS_PER_USER) {
+      return res.status(400).json({
+        message: `The user has reached the maximum limit of ${MAXIMUM_GROUPS_PER_USER} groups.`,
+      });
+    }
 
     //add user to group
     const addMemberQuery = `
@@ -271,6 +292,27 @@ const createGroup = async (req, res) => {
 
     // db connect
     const pool = await sql.connect(sqlConfig.returnServerConfig());
+
+    // Check how many groups the creator is part of
+    const creatorGroupCountQuery = `
+        SELECT COUNT(*) AS GroupCount
+        FROM GroupMembers
+        WHERE AccountID = @creatorAccountId
+        `;
+    const creatorGroupCountResult = await pool
+      .request()
+      .input("creatorAccountId", sql.Int, creatorAccountId)
+      .query(creatorGroupCountQuery);
+
+    const creatorGroupCount = creatorGroupCountResult.recordset[0].GroupCount;
+
+    // Check if the creator has reached the maximum group limit
+    if (creatorGroupCount >= MAXIMUM_GROUPS_PER_USER) {
+      return res.status(400).json({
+        message: `You have reached the maximum limit of ${MAXIMUM_GROUPS_PER_USER} groups per user.`,
+      });
+    }
+
 
     const query = `
      INSERT INTO Groups (GroupName, GroupAvatar) 
