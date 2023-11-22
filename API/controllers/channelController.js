@@ -161,6 +161,13 @@ const deleteChannel = async (req, res) => {
         .json({ message: "You do not have permission to delete this channel" });
     }
 
+    //delete channel messages
+    const deleteChannelMessagesQuery = `DELETE FROM ChannelMessages WHERE ChannelID = @channelId`;
+    await pool
+    .request()
+    .input("channelId", sql.Int, channelId)
+    .query(deleteChannelMessagesQuery);
+
     //delete all channel members from the channel table
     const deleteChannelMembersQuery = `DELETE FROM ChannelMembers WHERE ChannelID = @channelId`;
     await pool
