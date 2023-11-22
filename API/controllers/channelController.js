@@ -164,9 +164,9 @@ const deleteChannel = async (req, res) => {
     //delete channel messages
     const deleteChannelMessagesQuery = `DELETE FROM ChannelMessages WHERE ChannelID = @channelId`;
     await pool
-    .request()
-    .input("channelId", sql.Int, channelId)
-    .query(deleteChannelMessagesQuery);
+      .request()
+      .input("channelId", sql.Int, channelId)
+      .query(deleteChannelMessagesQuery);
 
     //delete all channel members from the channel table
     const deleteChannelMembersQuery = `DELETE FROM ChannelMembers WHERE ChannelID = @channelId`;
@@ -403,7 +403,7 @@ const channelInfo = async (req, res) => {
       .query(channelMembersQuery);
 
     const members = channelMembersResult.recordset.map((member) => ({
-      MemberId: member.AccountID,
+      AccountID: member.AccountID,
       MemberName: member.DisplayName,
       MemberRole: member.Role,
       avatar: member.Avatar,
