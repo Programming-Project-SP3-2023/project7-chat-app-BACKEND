@@ -193,19 +193,58 @@ const deleteGroup = async (req, res) => {
         .status(403)
         .json({ message: "You do not have permission to delete this group" });
     }
-    //delete group and related records in groupmembers
-    const deleteGroupQuery = `
-            DELETE FROM Groups WHERE GroupID = @groupId;
-            DELETE FROM GroupMembers WHERE GroupID = @groupId;
-        `;
+    //create a transaction to commit all removals at once
+    const transaction = new sql.Transaction(pool);
+    await transaction.begin();
 
-    await pool
+    // delete Channel Members
+    const deleteChannelMembersQuery = `
+      DELETE FROM ChannelMembers
+      WHERE ChannelID IN (
+        SELECT ChannelID FROM Channels WHERE GroupID = @groupId
+      );
+    `;
+    await transaction
+      .request()
+      .input("groupId", sql.Int, groupId)
+      .query(deleteChannelMembersQuery);
+
+    // delete Channels
+    const deleteChannelsQuery = `
+      DELETE FROM Channels WHERE GroupID = @groupId;
+    `;
+    await transaction
+      .request()
+      .input("groupId", sql.Int, groupId)
+      .query(deleteChannelsQuery);
+
+    // delete Group Members
+    const deleteGroupMembersQuery = `
+      DELETE FROM GroupMembers WHERE GroupID = @groupId;
+    `;
+    await transaction
+      .request()
+      .input("groupId", sql.Int, groupId)
+      .query(deleteGroupMembersQuery);
+
+    // delete Group
+    const deleteGroupQuery = `
+      DELETE FROM Groups WHERE GroupID = @groupId;
+    `;
+    await transaction
       .request()
       .input("groupId", sql.Int, groupId)
       .query(deleteGroupQuery);
-    return res.status(200).json({ message: "Group deleted Successfully" });
+
+    // complete transaction
+    await transaction.commit();
+
+    return res.status(200).json({ message: "Group deleted successfully" });
   } catch (error) {
     console.error(error);
+    if (transaction) {
+      await transaction.rollback();
+    }
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
