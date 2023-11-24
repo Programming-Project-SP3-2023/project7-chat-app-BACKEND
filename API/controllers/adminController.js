@@ -41,12 +41,10 @@ const getAccounts = async (req, res) => {
 const updateAccount = async (req, res) => {
     try{
         sql.connect(sqlConfig.returnServerConfig()).then(async function(){
-            console.log("before");
             //select results similar to the input display name entered
             const result = await sql.query
             (`UPDATE Accounts SET Email = '${req.body.Email}', DisplayName = '${req.body.DisplayName}', Dob = '${req.body.Dob}', Avatar = '${req.body.Avatar}' Where AccountID = ${req.body.AccountID}`);
             
-            console.log("After");
 
             const userList = result.recordsets;
             //return any results found
@@ -94,7 +92,6 @@ const deleteAccount = async (req, res) => {
 
             //delete from Messages table
             for(var i=0; i<result.rowsAffected; i++){
-                console.log(result.recordsets[0][i].FriendshipID);
 
                 result = await sql.query
                 (`DELETE FROM Messages
@@ -151,8 +148,6 @@ const deleteAccount = async (req, res) => {
 const changePassword = async (req, res) => {
     try{
         //encrypt the users password
-        console.log(req.body.AccountID);
-        console.log(req.body.password);
         const saltRounds = 10;
         let hashedPassword = null;
         bcrypt.genSalt(saltRounds, function(err, salt){
@@ -202,8 +197,6 @@ const adminLogin = async (req, res) => {
         }
         const user = result.recordset[0];
 
-        console.log(user);
-        console.log(user.AccountID);
         
         //TODO: Check if isAdmin = 1;
         const accountType = await pool
@@ -215,7 +208,6 @@ const adminLogin = async (req, res) => {
             return res.status(401).json({ message: 'You must be an admin to login to this site' }); 
         }
 
-        console.log("test");
         
         // Compare provided password with stored hash
         const isPasswordValid = await bcrypt.compare(password, user.PasswordHash);

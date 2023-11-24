@@ -46,7 +46,6 @@ function sendVerificationEmail(email, emailToken) {
         if (error) {
             console.error('Error sending verification email:', error);
         } else {
-            console.log('Verification email sent:', info.response);
         }
     });
 }

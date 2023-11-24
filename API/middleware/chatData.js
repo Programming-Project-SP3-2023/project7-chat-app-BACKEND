@@ -27,7 +27,6 @@ async function getMessageHistory(chatID, num) {
             });
         }
         catch (err) {
-            console.log(err.message);
             reject(err);
         }
     });
@@ -36,7 +35,6 @@ async function getMessageHistory(chatID, num) {
 
 async function saveMessage(message, accountID, timestamp, currentChatID) {
     try {
-        console.log(timestamp);
         sql.connect(sqlConfig.returnServerConfig()).then(async function () {
 
             //if there isn't an existing friend request, add friendship into the database as pending
@@ -52,7 +50,6 @@ async function saveMessage(message, accountID, timestamp, currentChatID) {
         })
     }
     catch (err) {
-        console.log(err.message);
         return Promise.resolve(false);
     }
 }
@@ -64,7 +61,6 @@ function formatDate(date) {
 async function isValidChatID(chatID, accountID) {
 
     try {
-        console.log("checking chat ID is valid now with chatid " + chatID);
         if(chatID){
         sql.connect(sqlConfig.returnServerConfig()).then(async function () {
             const query = `SELECT FriendshipID from Friendships WHERE FriendshipID = ${chatID} AND RequesterID = ${accountID} OR AddresseeID = ${accountID}`;
@@ -73,7 +69,6 @@ async function isValidChatID(chatID, accountID) {
             const result = await sql.query(query);
 
                 if (result.rowsAffected > 0) {
-                    console.log("ChatID in db")
                     return true;
                 }
                 else {
@@ -138,7 +133,6 @@ async function isValidGroupID(groupID, accountID) {
         const result = await connection.query(query);
 
         if (result.rowsAffected > 0) {
-            console.log("groupID in db");
             const inGroup = await isInGroup(groupID, accountID);
             return inGroup;
         } else {
@@ -160,7 +154,6 @@ async function isInGroup(groupID, accountID) {
         const result = await connection.query(query);
 
         if (result.rowsAffected > 0) {
-            console.log("account is a member of the group in db");
             return true;
         } else {
             return false;
@@ -182,23 +175,19 @@ async function isValidChannelID(channelID, groupID, accountID) {
         WHERE Channels.GroupID = ${groupID} AND Channels.ChannelID = ${channelID}`;
         const result = await connection.query(query);
 
-        console.log(result.rowsAffected);
 
         if (result.rowsAffected > 0) {
-            console.log("Channel in db");
             return true;
         } else {
             return false;
         }
     } catch (err) {
-        console.log(err)
         return false;
     }
 }
 
 async function saveChannelMessage(message, accountID, timestamp, currentChatID) {
     try {
-        console.log(timestamp);
         sql.connect(sqlConfig.returnServerConfig()).then(async function () {
 
             //if there isn't an existing friend request, add friendship into the database as pending
@@ -214,7 +203,6 @@ async function saveChannelMessage(message, accountID, timestamp, currentChatID) 
         })
     }
     catch (err) {
-        console.log(err.message);
         return Promise.resolve(false);
     }
 }
@@ -234,7 +222,6 @@ async function getChannelMessageHistory(channelID, num) {
             });
         }
         catch (err) {
-            console.log(err.message);
             reject(err);
         }
     });

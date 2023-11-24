@@ -61,7 +61,6 @@ const createChannel = async (req, res) => {
 
     const channelId = createChannelResult.recordset[0].ChannelID;
 
-    console.log("channelId....", channelId);
 
     return res.status(201).json({
       message: "Channel created successfully",
@@ -311,7 +310,6 @@ const removeMember = async (req, res) => {
           "You do not have permission to remove a member from this channel",
       });
     }
-    console.log(memberId);
     // If the user has permission, remove the member from the channel
     const removeMemberQuery = `
             DELETE FROM ChannelMembers
