@@ -45,7 +45,7 @@ const getAccounts = async (req, res) => {
 
 //update the user account details
 const updateAccount = async (req, res) => {
-    if(!isUserAnAdmin(req.user)){
+    if(isUserAnAdmin(req.user) == false){
         return res.status(401).json({
             Message: "Unauthorized"
         })
@@ -90,7 +90,7 @@ const updateAccount = async (req, res) => {
 
 //Delete the user account details
 const deleteAccount = async (req, res) => {
-    if(!isUserAnAdmin(req.user)){
+    if(isUserAnAdmin(req.user) == false){
         return res.status(401).json({
             Message: "Unauthorized"
         })
@@ -175,7 +175,7 @@ const deleteAccount = async (req, res) => {
 //changes the users password
 const changePassword = async (req, res) => {
     //check if logged in user is an admin
-    if(!isUserAnAdmin(req.user)){
+    if(isUserAnAdmin(req.user) == false){
         return res.status(401).json({
             Message: "Unauthorized"
         })
@@ -269,7 +269,7 @@ const adminLogin = async (req, res) => {
 //checks if the current user is an admin
 function isUserAnAdmin(user){
     console.log(user);
-    if(user.type != "Admin"){
+    if(user.type !== "Admin"){
         false;
     } else {
         true;
