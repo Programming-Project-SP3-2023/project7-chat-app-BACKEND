@@ -186,9 +186,8 @@ const changePassword = async (req, res) => {
 
     try{
         //encrypt the users password
-        const saltRounds = 10;
-        const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
-
+        const salt = await bcrypt.genSalt(10)
+        const hashedPassword = await bcrypt.hash(req.body.password, salt);
 
         sql.connect(sqlConfig.returnServerConfig()).then(async function(){
             //check if user exists
@@ -201,9 +200,11 @@ const changePassword = async (req, res) => {
                 });
             }   
 
+            console.log("hash :"+ hashedPassword);
+
             //select results similar to the input display name entered
             result = await sql.query
-            (`UPDATE Logins SET PasswordHash = '${hashedNewPassword}' Where AccountID = '${req.body.AccountID}'`);
+            (`UPDATE Logins SET PasswordHash = '${hashedPassword}' Where AccountID = ${req.body.AccountID}`);
             
             //return any results found
             if(result.rowsAffected > 0){
@@ -217,7 +218,8 @@ const changePassword = async (req, res) => {
             }
         });
     //catch any errors
-    } catch{
+    } catch(err){
+        console.log(err);
         return res.status(400).json({
             Message: "Server Error"
         });
