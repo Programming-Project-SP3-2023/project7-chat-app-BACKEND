@@ -130,9 +130,9 @@ const groupInfo = async (req, res) => {
     const groupId = req.params.groupId;
 
     // Check to see if the user is a member of the group
-    if(await groupUtils.isUserGroupMember(req.user.accountID, groupId) == false){
-      return res.status(403).json({ message: "Unauthorized" });
-    }
+    // if(await groupUtils.isUserGroupMember(req.user.accountID, groupId) == false){
+    //   return res.status(403).json({ message: "Unauthorized" });
+    // }
 
     // db
     const pool = await sql.connect(sqlConfig.returnServerConfig());
