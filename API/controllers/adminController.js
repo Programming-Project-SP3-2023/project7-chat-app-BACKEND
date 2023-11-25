@@ -195,6 +195,7 @@ const changePassword = async (req, res) => {
         })
 
          console.log(req.body.password);
+         console.log(req.body.AccountID);
 
 
         sql.connect(sqlConfig.returnServerConfig()).then(async function(){
