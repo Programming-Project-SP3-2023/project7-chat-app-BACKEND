@@ -232,7 +232,7 @@ const adminLogin = async (req, res) => {
         // Get user's info by username
         const result = await pool
             .request()
-            .input('username', sql.NVarChar, username) // Corrected data type
+            .input('username', sql.NVarChar, req.body.username) // Corrected data type
             .query('SELECT AccountID, PasswordHash FROM Logins WHERE Username = @username');
         
         if (result.recordset.length === 0) {
@@ -251,7 +251,7 @@ const adminLogin = async (req, res) => {
         }
         
         // Compare provided password with stored hash
-        const isPasswordValid = await bcrypt.compare(password, user.PasswordHash);
+        const isPasswordValid = await bcrypt.compare(req.body.password, user.PasswordHash);
         
         if (!isPasswordValid) {
             return res.status(401).json({ message: 'Invalid username or password' });
