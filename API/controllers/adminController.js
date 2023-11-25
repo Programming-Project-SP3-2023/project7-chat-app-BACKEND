@@ -269,9 +269,9 @@ const adminLogin = async (req, res) => {
 //checks if the current user is an admin
 function isUserAnAdmin(user){
     if(user.type != "Admin"){
-        return resolve(false);
+        false;
     } else {
-        return resolve(true);
+        true;
     }
 }
 
