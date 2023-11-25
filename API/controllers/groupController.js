@@ -130,9 +130,9 @@ const groupInfo = async (req, res) => {
     const groupId = req.params.groupId;
 
     // Check to see if the user is a member of the group
-    // if(await groupUtils.isUserGroupMember(req.user.accountID, groupId) == false){
-    //   return res.status(403).json({ message: "Unauthorized" });
-    // }
+    if(await groupUtils.isUserGroupMember(req.user.AccountID, groupId) == false){
+      return res.status(403).json({ message: "Unauthorized" });
+    }
 
     // db
     const pool = await sql.connect(sqlConfig.returnServerConfig());
@@ -185,12 +185,9 @@ const deleteGroup = async (req, res) => {
     const groupId = req.params.groupId;
     const pool = await sql.connect(sqlConfig.returnServerConfig());
 
-    console.log(groupId);
-    console.log(req.user);
-
-    // if(await groupUtils.isUserGroupAdmin(req.user.accountID, groupId) == false){
-    //   return res.status(403).json({ message: "Unauthorized" });
-    // }
+    if(await groupUtils.isUserGroupAdmin(req.user.AccountID, groupId) == false){
+      return res.status(403).json({ message: "Unauthorized" });
+    }
 
     //create a transaction to commit all removals at once
     const transaction = new sql.Transaction(pool);
