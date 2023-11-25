@@ -203,7 +203,7 @@ const changePassword = async (req, res) => {
 
             //select results similar to the input display name entered
             result = await sql.query
-            (`UPDATE Logins SET PasswordHash = '${hashedNewPassword}' Where AccountID = '${req.body.AccountID}'`);
+            (`UPDATE Logins SET PasswordHash = '${hashedNewPassword}' Where AccountID = ${req.body.AccountID}`);
             
             //return any results found
             if(result.rowsAffected > 0){
