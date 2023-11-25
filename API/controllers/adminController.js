@@ -7,11 +7,11 @@ const jwt = require('jsonwebtoken');
 
 //returns a list of user accounts
 const getAccounts = async (req, res) => {
-    if(!isUserAnAdmin(req.user)){
-        return res.status(401).json({
-            Message: "Unauthorized"
-        })
-    }
+    // if(!isUserAnAdmin(req.user)){
+    //     return res.status(401).json({
+    //         Message: "Unauthorized"
+    //     })
+    // }
 
     try{
         sql.connect(sqlConfig.returnServerConfig()).then(async function(){

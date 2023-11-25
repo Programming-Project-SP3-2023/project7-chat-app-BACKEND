@@ -132,39 +132,39 @@ const editDisplayname = async (req, res, next) =>{
     
 
 
-    const getUserInfo = async (req, res, next) => {
-        try {
-            // Get id from the token
-            const userId = req.user.AccountID;
-            // Connect to the database
-            const pool = await sql.connect(sqlConfig);
+const getUserInfo = async (req, res, next) => {
+    try {
+        // Get id from the token
+        const userId = req.user.AccountID;
+        // Connect to the database
+        const pool = await sql.connect(sqlConfig);
 
-            const result = await pool
-                .request()
-                .input('userId', sql.Int, userId)
-                .query(`
-                    SELECT A.Email, A.DisplayName, A.Dob, L.Username
-                    FROM Accounts A
-                    INNER JOIN Logins L ON A.AccountID = L.AccountID
-                    WHERE A.AccountID = @userId
-                `);
-    
-            if (result.recordset.length === 0) {
-                return res.status(404).json({ message: 'User not found' });
-            }
-            const userInfo = {
-                email: result.recordset[0].Email,
-                displayName: result.recordset[0].DisplayName,
-                dob: result.recordset[0].Dob,
-                //add username
-                username: result.recordset[0].Username, 
-            };
-            res.status(200).json(userInfo);
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ message: 'Server error' });
+        const result = await pool
+            .request()
+            .input('userId', sql.Int, userId)
+            .query(`
+                SELECT A.Email, A.DisplayName, A.Dob, L.Username
+                FROM Accounts A
+                INNER JOIN Logins L ON A.AccountID = L.AccountID
+                WHERE A.AccountID = @userId
+            `);
+
+        if (result.recordset.length === 0) {
+            return res.status(404).json({ message: 'User not found' });
         }
-    };
+        const userInfo = {
+            email: result.recordset[0].Email,
+            displayName: result.recordset[0].DisplayName,
+            dob: result.recordset[0].Dob,
+            //add username
+            username: result.recordset[0].Username, 
+        };
+        res.status(200).json(userInfo);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
 
 module.exports ={
     updatePassword,
