@@ -175,6 +175,8 @@ const deleteAccount = async (req, res) => {
 
 //changes the users password
 const changePassword = async (req, res) => {
+    console.log(req.body.password);
+
     //check if logged in user is an admin
     if(isUserAnAdmin(req.user) == false){
         return res.status(401).json({
@@ -186,7 +188,7 @@ const changePassword = async (req, res) => {
         //encrypt the users password
         const saltRounds = 10;
         let hashedPassword = null;
-        bcrypt.genSalt(saltRounds, function(err, salt){
+        await bcrypt.genSalt(saltRounds, function(err, salt){
             bcrypt.hash(req.body.password, salt, function(err, hash){
                 hashedPassword = hash;
             })
