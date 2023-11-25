@@ -187,15 +187,7 @@ const changePassword = async (req, res) => {
     try{
         //encrypt the users password
         const saltRounds = 10;
-        let hashedPassword;
-        await bcrypt.genSalt(saltRounds, function(err, salt){
-            bcrypt.hash(req.body.password, salt, function(err, hash){
-                hashedPassword = hash;
-            })
-        })
-
-         console.log(req.body.password);
-         console.log(req.body.AccountID);
+        const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
 
 
         sql.connect(sqlConfig.returnServerConfig()).then(async function(){
@@ -211,7 +203,7 @@ const changePassword = async (req, res) => {
 
             //select results similar to the input display name entered
             result = await sql.query
-            (`UPDATE Logins SET PasswordHash = '${hashedPassword}' Where AccountID = '${req.body.AccountID}'`);
+            (`UPDATE Logins SET PasswordHash = '${hashedNewPassword}' Where AccountID = '${req.body.AccountID}'`);
             
             //return any results found
             if(result.rowsAffected > 0){
