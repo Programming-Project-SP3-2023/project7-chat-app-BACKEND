@@ -55,7 +55,8 @@ const updateAccount = async (req, res) => {
         sql.connect(sqlConfig.returnServerConfig()).then(async function(){
             //check if email  is unique
             var result = await sql.query`SELECT * FROM Accounts
-                                        WHERE email = ${req.body.Email}`
+                                        WHERE email = ${req.body.Email}
+                                        AND NOT AccountID = ${req.body.AccountID} `
 
             if(result.rowsAffected > 0){
                 //return error if email isn't unique
