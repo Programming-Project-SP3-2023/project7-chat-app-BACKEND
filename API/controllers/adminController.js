@@ -187,12 +187,15 @@ const changePassword = async (req, res) => {
     try{
         //encrypt the users password
         const saltRounds = 10;
-        let hashedPassword = null;
+        let hashedPassword;
         await bcrypt.genSalt(saltRounds, function(err, salt){
             bcrypt.hash(req.body.password, salt, function(err, hash){
                 hashedPassword = hash;
             })
         })
+
+         console.log(req.body.password);
+
 
         sql.connect(sqlConfig.returnServerConfig()).then(async function(){
             //check if user exists
