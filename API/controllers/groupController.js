@@ -196,7 +196,17 @@ const deleteGroup = async (req, res) => {
     //create a transaction to commit all removals at once
     const transaction = new sql.Transaction(pool);
     await transaction.begin();
-
+    // delete Channel Messages
+    const deleteChannelMessagesQuery =`
+    DELETE FROM ChannelMessages
+    WHERE ChannelID IN (
+      SELECT ChannelID FROM Channels WHERE GroupID = @groupId
+    );
+    `;
+    await transaction
+    .request()
+    .input("groupId", sql.Int, groupId)
+    .query(deleteChannelMessagesQuery);
     // delete Channel Members
     const deleteChannelMembersQuery = `
       DELETE FROM ChannelMembers
