@@ -49,7 +49,6 @@ const createChannel = async (req, res) => {
 
     const channelId = createChannelResult.recordset[0].ChannelID;
 
-    console.log("channelId....", channelId);
 
     return res.status(201).json({
       message: "Channel created successfully",
@@ -234,7 +233,7 @@ const removeMember = async (req, res) => {
     // Connect to the DB
     const pool = await sql.connect(sqlConfig.returnServerConfig());
 
-    // Remove the member from the channel
+    // If the user has permission, remove the member from the channel
     const removeMemberQuery = `
             DELETE FROM ChannelMembers
             WHERE MemberID = @memberId

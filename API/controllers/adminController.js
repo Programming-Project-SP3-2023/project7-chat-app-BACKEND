@@ -120,7 +120,6 @@ const deleteAccount = async (req, res) => {
 
             //delete from Messages table
             for(var i=0; i<result.rowsAffected; i++){
-                console.log(result.recordsets[0][i].FriendshipID);
 
                 result = await sql.query
                 (`DELETE FROM Messages
@@ -228,11 +227,6 @@ const changePassword = async (req, res) => {
 
 //handles secure login for admins only
 const adminLogin = async (req, res) => {
-    const username = req.body.username;
-    const password = req.body.password;
-
-
-
     try {
         const pool = await sql.connect(sqlConfig.returnServerConfig());
         // Get user's info by username
