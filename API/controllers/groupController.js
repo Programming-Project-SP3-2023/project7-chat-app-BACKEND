@@ -186,7 +186,7 @@ const deleteGroup = async (req, res) => {
     const pool = await sql.connect(sqlConfig.returnServerConfig());
 
     console.log(groupId);
-    console.log(req.user.accountID);
+    console.log(req.user);
 
     // if(await groupUtils.isUserGroupAdmin(req.user.accountID, groupId) == false){
     //   return res.status(403).json({ message: "Unauthorized" });
