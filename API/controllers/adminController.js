@@ -7,6 +7,12 @@ const jwt = require('jsonwebtoken');
 
 //returns a list of user accounts
 const getAccounts = async (req, res) => {
+    if(!isUserAnAdmin(req.user)){
+        return res.status(401).json({
+            Message: "Unauthorized"
+        })
+    }
+
     try{
         sql.connect(sqlConfig.returnServerConfig()).then(async function(){
             //select results similar to the input display name entered
@@ -39,15 +45,29 @@ const getAccounts = async (req, res) => {
 
 //update the user account details
 const updateAccount = async (req, res) => {
+    if(!isUserAnAdmin(req.user)){
+        return res.status(401).json({
+            Message: "Unauthorized"
+        })
+    }
+
     try{
         sql.connect(sqlConfig.returnServerConfig()).then(async function(){
-            console.log("before");
+            //check if email  is unique
+            var result = await sql.query`SELECT * FROM Accounts
+                                        WHERE email = ${req.body.Email}`
+
+            if(result.rowsAffected > 0){
+                //return error if email isn't unique
+                return res.status(409).json({
+                    Message: "Email is taken"
+                });
+            }
+
             //select results similar to the input display name entered
-            const result = await sql.query
+            result = await sql.query
             (`UPDATE Accounts SET Email = '${req.body.Email}', DisplayName = '${req.body.DisplayName}', Dob = '${req.body.Dob}', Avatar = '${req.body.Avatar}' Where AccountID = ${req.body.AccountID}`);
             
-            console.log("After");
-
             const userList = result.recordsets;
             //return any results found
             if(result.rowsAffected > 0){
@@ -70,6 +90,12 @@ const updateAccount = async (req, res) => {
 
 //Delete the user account details
 const deleteAccount = async (req, res) => {
+    if(!isUserAnAdmin(req.user)){
+        return res.status(401).json({
+            Message: "Unauthorized"
+        })
+    }
+
     try{
         sql.connect(sqlConfig.returnServerConfig()).then(async function(){
 
@@ -149,10 +175,15 @@ const deleteAccount = async (req, res) => {
 
 //changes the users password
 const changePassword = async (req, res) => {
+    //check if logged in user is an admin
+    if(!isUserAnAdmin(req.user)){
+        return res.status(401).json({
+            Message: "Unauthorized"
+        })
+    }
+
     try{
         //encrypt the users password
-        console.log(req.body.AccountID);
-        console.log(req.body.password);
         const saltRounds = 10;
         let hashedPassword = null;
         bcrypt.genSalt(saltRounds, function(err, salt){
@@ -162,8 +193,18 @@ const changePassword = async (req, res) => {
         })
 
         sql.connect(sqlConfig.returnServerConfig()).then(async function(){
+            //check if user exists
+            var result = await sql.query
+            (`SELECT * FROM Accounts WHERE AccountID = ${req.body.AccountID}`);
+
+            if(result.recordsets == 0){
+                return res.status(401).json({
+                    Message: "User doesn't exist, please try again!"
+                });
+            }   
+
             //select results similar to the input display name entered
-            const result = await sql.query
+            result = await sql.query
             (`UPDATE Logins SET PasswordHash = '${hashedPassword}' Where AccountID = '${req.body.AccountID}'`);
             
             //return any results found
@@ -185,9 +226,12 @@ const changePassword = async (req, res) => {
     }
 }
 
+//handles secure login for admins only
 const adminLogin = async (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
+
+
 
     try {
         const pool = await sql.connect(sqlConfig.returnServerConfig());
@@ -201,9 +245,6 @@ const adminLogin = async (req, res) => {
             return res.status(401).json({ message: 'Invalid username or password' });
         }
         const user = result.recordset[0];
-
-        console.log(user);
-        console.log(user.AccountID);
         
         //TODO: Check if isAdmin = 1;
         const accountType = await pool
@@ -214,8 +255,6 @@ const adminLogin = async (req, res) => {
         if(accountType.recordset.length === 0){
             return res.status(401).json({ message: 'You must be an admin to login to this site' }); 
         }
-
-        console.log("test");
         
         // Compare provided password with stored hash
         const isPasswordValid = await bcrypt.compare(password, user.PasswordHash);
@@ -225,13 +264,22 @@ const adminLogin = async (req, res) => {
         }
         //Set web token with key taken from .env
         const jwtSecret = process.env.JWT_SECRET;
-        const token = jwt.sign({ AccountID: user.AccountID, username: user.Username }, jwtSecret, { expiresIn: '1h' });
+        const token = jwt.sign({ AccountID: user.AccountID, username: user.Username, type: 'Admin' }, jwtSecret, { expiresIn: '1h' });
         res.status(200).json({ message: 'Login Successful', token, AccountID: user.AccountID });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+//checks if the current user is an admin
+function isUserAnAdmin(user){
+    if(user.type != "Admin"){
+        return resolve(false);
+    } else {
+        return resolve(true);
+    }
+}
 
 module.exports={
     getAccounts,

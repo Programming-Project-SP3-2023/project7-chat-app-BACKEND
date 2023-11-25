@@ -1,12 +1,12 @@
 const express = require("express");
 const sql = require("mssql");
 const sqlConfig = require("../config");
+const groupUtils = require("../middleware/groupUtils");
 const { stringify } = require("querystring");
 const authenticateToken = require("../middleware/authenticateToken");
 const router = express.Router();
 
-//Return list of group IDs for a user
-
+// Return list of group IDs for a user
 const currentGroups = async (req, res) => {
   try {
     // Account ID from req with token data
@@ -38,12 +38,18 @@ const currentGroups = async (req, res) => {
 //Add a user to a group via email
 const addMember = async (req, res) => {
   try {
+    // Get data from the req
     const { email, groupId } = req.body;
+
+    // Validate if the user is the group admin
+    if(await groupUtils.isUserGroupAdmin(req.user.AccountID, groupId) == false){
+      return res.status(403).json({ message: "Unauthorized" });
+    }
 
     //db connect
     const pool = await sql.connect(sqlConfig.returnServerConfig());
 
-    //get acctID of user with specified email
+    //get accounttID of user with specified email
     const getUserQuery = `
         SELECT AccountID
         FROM Accounts
@@ -56,7 +62,13 @@ const addMember = async (req, res) => {
     if (userResult.recordset.length === 0) {
       return res.status(404).json({ message: "User not found" });
     }
+
     const accountId = userResult.recordset[0].AccountID;
+
+    // Check to see if the user is a member of the group
+    if(await groupUtils.isUserGroupMember(accountId, groupId) == true){
+      return res.status(404).json({ message: "Member already in the group" });
+    }
 
     //add user to group
     const addMemberQuery = `
@@ -79,24 +91,20 @@ const addMember = async (req, res) => {
 
 const removeMember = async (req, res) => {
   try {
+    // connect to the database
+    const pool = await sql.connect(sqlConfig.returnServerConfig());
+
     const { accountId, groupId } = req.body;
 
-    //db
-    const pool = await sql.connect(sqlConfig.returnServerConfig());
-    const memberExistsQuery = `
-        SELECT 1
-        FROM GroupMembers
-        WHERE AccountID = @accountId
-        AND GroupID = @groupId
-        `;
-    const memberExistsResult = await pool
-      .request()
-      .input("accountId", sql.Int, accountId)
-      .input("groupId", sql.Int, groupId)
-      .query(memberExistsQuery);
-    if (memberExistsResult.rowsAffected[0] !== 1) {
-      return res.status(404).json({ message: "Member not found" });
+    if(await groupUtils.isUserGroupAdmin(req.user.AccountID, groupId) == false){
+      return res.status(403).json({ message: "Unauthorized" });
     }
+
+    // Check to see if the user is a member of the group
+    if(await groupUtils.isUserGroupMember(accountId, groupId) == false){
+      return res.status(403).json({ message: "User doesn't exist in group" });
+    }
+
     //remove member
     const removeMemberQuery = `
         DELETE FROM GroupMembers
@@ -120,6 +128,11 @@ const removeMember = async (req, res) => {
 const groupInfo = async (req, res) => {
   try {
     const groupId = req.params.groupId;
+
+    // Check to see if the user is a member of the group
+    if(await groupUtils.isUserGroupMember(req.user.accountID, groupId) == false){
+      return res.status(403).json({ message: "Unauthorized" });
+    }
 
     // db
     const pool = await sql.connect(sqlConfig.returnServerConfig());
@@ -170,29 +183,12 @@ const groupInfo = async (req, res) => {
 const deleteGroup = async (req, res) => {
   try {
     const groupId = req.params.groupId;
-    const userAccountId = req.user.AccountID;
     const pool = await sql.connect(sqlConfig.returnServerConfig());
 
-    //Check if user is the admin of the group
-    const isAdminQuery = `
-            SELECT 1
-            FROM GroupMembers
-            WHERE GroupID = @groupId
-            AND AccountID = @userAccountId
-            AND Role = 'Admin'
-        `;
-    const isAdminResult = await pool
-      .request()
-      .input("groupId", sql.Int, groupId)
-      .input("userAccountId", sql.Int, userAccountId)
-      .query(isAdminQuery);
-
-    //If user is not an admin, return error
-    if (isAdminResult.rowsAffected[0] !== 1) {
-      return res
-        .status(403)
-        .json({ message: "You do not have permission to delete this group" });
+    if(await groupUtils.isUserGroupAdmin(req.user.accountID, groupId) == false){
+      return res.status(403).json({ message: "Unauthorized" });
     }
+
     //delete group and related records in groupmembers
     const deleteGroupQuery = `
             DELETE FROM Groups WHERE GroupID = @groupId;
@@ -213,29 +209,16 @@ const deleteGroup = async (req, res) => {
 //edit a group's name
 const editGroupName = async (req, res) => {
   try {
+    // connect to DB
+    const pool = await sql.connect(sqlConfig.returnServerConfig());
+
+    //get data from the request
     const groupId = req.params.groupId;
     const { newGroupName } = req.body;
 
-    // check if user is the admin of the group
-    const isAdminQuery = `
-      SELECT 1
-      FROM GroupMembers
-      WHERE GroupID = @groupId
-      AND AccountID = @userAccountId
-      AND Role = 'Admin'
-    `;
-    const pool = await sql.connect(sqlConfig.returnServerConfig());
-    const isAdminResult = await pool
-      .request()
-      .input("groupId", sql.Int, groupId)
-      .input("userAccountId", sql.Int, req.user.AccountID)
-      .query(isAdminQuery);
-
-    // if user is not an admin, return an error
-    if (isAdminResult.rowsAffected[0] !== 1) {
-      return res.status(403).json({
-        message: "You do not have permission to update this group's name",
-      });
+    // Validates if the user is an admin
+    if(await groupUtils.isUserGroupAdmin(req.user.AccountID, groupId) == false){
+      return res.status(403).json({ message: "Unauthorized" });
     }
 
     // update group name in the database
@@ -262,6 +245,8 @@ const createGroup = async (req, res) => {
   try {
     // Get group details from the request body
     const { groupName, groupAvatar } = req.body;
+
+    // verify the user in the group admin
     if (!groupName) {
       return res.status(400).json({ message: "Group name is required" });
     }
@@ -271,6 +256,7 @@ const createGroup = async (req, res) => {
 
     // db connect
     const pool = await sql.connect(sqlConfig.returnServerConfig());
+
 
     const query = `
      INSERT INTO Groups (GroupName, GroupAvatar) 
@@ -321,12 +307,11 @@ const createGroup = async (req, res) => {
         return channelCreationResult.recordset[0].NewChannelID;
       };
 
-
       // Create General chat (Chat) channel
       const generalChatChannelId = await createChannel("General Chat", "Chat");
+
       // Create Meetings (Voice) channel
       const meetingsChannelId = await createChannel("Meetings", "Voice");
-  
   
       return res
         .status(201)
@@ -342,6 +327,7 @@ const createGroup = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
+
 module.exports = {
   deleteGroup,
   createGroup,

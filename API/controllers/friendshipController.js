@@ -14,6 +14,14 @@ function sendRequest(requesterID, requesteeID, res){
             })
         }
         sql.connect(sqlConfig.returnServerConfig()).then(async function(){
+            //check if accountID is valid
+            result = await sql.query`SELECT * FROM Accounts WHERE AccountID = ${requesteeID}`
+            if(result.recordsets == 0){
+                return res.status(401).json({
+                    Message: "User doesn't exist, please try again!"
+                });
+            }
+
             const existingFriendship = await checkForExistingFriendships(requesterID, requesteeID);
 
             //check DB for an existing friendship or friend request
@@ -174,7 +182,7 @@ async function returnFriendsList(currentUserID, status, res){
                     Message: "OK",
                     friendships
                 });
-            } else {
+            } else if (status == "Active") {
                 var result = await sql.query
                 `SELECT *
                 FROM Friendships
@@ -200,6 +208,10 @@ async function returnFriendsList(currentUserID, status, res){
                 return res.status(200).json({
                     Message: "OK",
                     friendships
+                });
+            } else {
+                return res.status(400).json({
+                    Message: "Error: Incorrect status entered"
                 });
             }
         });

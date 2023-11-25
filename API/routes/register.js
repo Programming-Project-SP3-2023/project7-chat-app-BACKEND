@@ -35,6 +35,23 @@ router.post('/', jsonParser, (req, res, next) =>{
         tokenCreationDateTime: new Date()
     }
 
+    if(user.name.length <= 0 || user.email.length <= 0 ||
+       user.dateOfBirth.length.length < 10 || user.username.length <= 0 ||
+       user.password.length <= 0){
+        return res.status(400).json({
+            Message: "Error: Incorrectly entered data, please try"
+        });
+    }
+
+    if(user.name == null || user.email == null  || user.dateOfBirth == null 
+        || user.username == null || user.password == null){
+            console.dir(user);
+        //return error if username isn't unique
+        return res.status(401).json({
+            Message: "Error: Null Value"
+        });
+    };
+
     // submit user to the database
     sql.connect(sqlConfig.returnServerConfig()).then(async function(){
         //check if username  is unique
@@ -43,7 +60,7 @@ router.post('/', jsonParser, (req, res, next) =>{
 
         if(result.rowsAffected != 0){
             //return error if username isn't unique
-            return res.status(401).json({
+            return res.status(409).json({
                 Message: "Username is taken"
             });
         }
@@ -54,7 +71,7 @@ router.post('/', jsonParser, (req, res, next) =>{
 
         if(result.rowsAffected != 0){
             //return error if email isn't unique
-            return res.status(401).json({
+            return res.status(409).json({
                 Message: "Email is taken"
             });
         }

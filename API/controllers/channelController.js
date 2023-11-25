@@ -1,6 +1,7 @@
 const express = require("express");
 const sql = require("mssql");
 const sqlConfig = require("../config");
+const groupUtils = require("../middleware/groupUtils");
 const { stringify } = require("querystring");
 const authenticateToken = require("../middleware/authenticateToken");
 const router = express.Router();
@@ -13,28 +14,15 @@ const createChannel = async (req, res) => {
   try {
     const { groupId, channelType, visibility, channelName } = req.body;
 
-    const userId = req.user.AccountID;
+    console.log(req.user);
+    console.log(groupId);
 
-    // check if the user is an admin of the group
-    const isAdminQuery = `
-            SELECT 1
-            FROM GroupMembers
-            WHERE GroupID = @groupId
-            AND AccountID = @userId
-            AND Role = 'Admin'
-        `;
 
     const pool = await sql.connect(sqlConfig.returnServerConfig());
-    const isAdminResult = await pool
-      .request()
-      .input("groupId", sql.Int, groupId)
-      .input("userId", sql.Int, userId)
-      .query(isAdminQuery);
-
-    if (isAdminResult.rowsAffected[0] !== 1) {
-      return res.status(403).json({
-        message: "You do not have permission to create a channel in this group",
-      });
+    
+    // Validates if the user is an admin
+    if(await groupUtils.isUserGroupAdmin(req.user.AccountID, groupId) == false){
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     // create the channel
@@ -78,34 +66,17 @@ const updateChannelName = async (req, res) => {
   try {
     const { channelId, newChannelName } = req.body;
 
-    // Check permissions
-    const userId = req.user.AccountID;
+    // Validates if the user is an admin
+    if(await groupUtils.isUserGroupAdmin(req.user.AccountID, req.params.groupId) == false){
+      return res.status(403).json({ message: "Unauthorized" });
+    }
 
-    // Check if the user is an admin of the group
-    const isAdminQuery = `
-            SELECT 1
-            FROM GroupMembers
-            WHERE GroupID = (
-                SELECT GroupID
-                FROM Channels
-                WHERE ChannelID = @channelId
-            )
-            AND AccountID = @userId
-            AND Role = 'Admin'
-        `;
+    // Validate that he channel exists in this group
+    if(await groupUtils.isChannelValid(req.params.groupId, channelId) == false){
+      return res.status(404).json({ message: "Channel doesn't exist in this group" });
+    }
 
     const pool = await sql.connect(sqlConfig.returnServerConfig());
-    const isAdminResult = await pool
-      .request()
-      .input("channelId", sql.Int, channelId)
-      .input("userId", sql.Int, userId)
-      .query(isAdminQuery);
-
-    if (isAdminResult.rowsAffected[0] !== 1) {
-      return res.status(403).json({
-        message: "You do not have permission to change the channel name",
-      });
-    }
 
     // Update the channel name in the database
     const updateChannelNameQuery = `
@@ -133,32 +104,17 @@ const updateChannelName = async (req, res) => {
 const deleteChannel = async (req, res) => {
   try {
     const { channelId } = req.params;
-    const userId = req.user.AccountID;
-
-    // Check if the user is an admin of the group that the channel belongs to
-    const isAdminQuery = `
-            SELECT 1
-            FROM GroupMembers GM
-            WHERE GM.GroupID = (
-                SELECT GroupID
-                FROM Channels
-                WHERE ChannelID = @channelId
-            )
-            AND GM.AccountID = @userId
-            AND GM.Role = 'Admin'
-        `;
 
     const pool = await sql.connect(sqlConfig.returnServerConfig());
-    const isAdminResult = await pool
-      .request()
-      .input("channelId", sql.Int, channelId)
-      .input("userId", sql.Int, userId)
-      .query(isAdminQuery);
 
-    if (isAdminResult.rowsAffected[0] !== 1) {
-      return res
-        .status(403)
-        .json({ message: "You do not have permission to delete this channel" });
+    // Validates if the user is an admin
+    if(await groupUtils.isUserGroupAdmin(req.user.AccountID, req.params.groupId) == false){
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // check to see if channel exists
+    if(await isChannelValid(req.params.groupId, channelId) == false){
+      return res.status(404).json({ message: "Channel doesn't exist" });
     }
 
     //delete channel messages
@@ -197,61 +153,46 @@ const addMember = async (req, res) => {
     const { channelId, userIdToAdd } = req.body;
     const groupId = req.params.groupId;
 
-    const userId = req.user.AccountID;
+    // Validates if the user is an admin
+    if(await groupUtils.isUserGroupAdmin(req.user.AccountID, groupId) == false){
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+    console.log("test");
 
-    // get the memberId for the given userIdToAdd within the current group
-    const getMemberIdQuery = `
-            SELECT MemberID
-            FROM GroupMembers
-            WHERE GroupID = @groupId
-            AND AccountID = @userIdToAdd
-        `;
+    // Check if user is already in the channel
+    if(groupUtils.isUserChannelMember(userIdToAdd, groupId, channelId) == false){
+      return res.status(404).json({ message: "User already exists in the channel" });
+    }
 
-    const pool = await sql.connect(sqlConfig.returnServerConfig());
-    const getMemberIdResult = await pool
-      .request()
-      .input("groupId", sql.Int, groupId)
-      .input("userIdToAdd", sql.Int, userIdToAdd)
-      .query(getMemberIdQuery);
+    // check to see if channel exists
+    if(await groupUtils.isChannelValid(req.params.groupId, channelId) == false){
+      return res.status(404).json({ message: "Channel doesn't exist" });
+    }
 
-    const memberId = getMemberIdResult.recordset[0]?.MemberID;
-
-    if (!memberId) {
+    // Check to see if the user is a member of the group
+    if(await groupUtils.isUserGroupMember(userIdToAdd, groupId) == false){
       return res.status(404).json({ message: "Member not found in the group" });
     }
-    // Check if the user is an admin of the group
-    const isAdminQuery = `
-            SELECT 1
-            FROM GroupMembers GM
-            WHERE GM.GroupID = @groupId
-            AND GM.AccountID = @userId
-            AND GM.Role = 'Admin'
-        `;
-
-    const isAdminResult = await pool
-      .request()
-      .input("groupId", sql.Int, groupId)
-      .input("userId", sql.Int, userId)
-      .query(isAdminQuery);
-
-    if (isAdminResult.rowsAffected[0] !== 1) {
-      return res.status(403).json({
-        message: "You do not have permission to add a member to this channel",
-      });
-    }
+    
+    //connect to the DB
+    const pool = await sql.connect(sqlConfig.returnServerConfig());
 
     // If the user has permission, add the member to the channel
-    const addMemberQuery = `
-            INSERT INTO ChannelMembers (MemberID, ChannelID)
-            VALUES (@memberId, @channelId)
-        `;
-
+    const addMemberQuery = 
+    `
+    INSERT INTO ChannelMembers (MemberID, ChannelID)
+    VALUES (@memberId, @channelId)
+    `;
+    
+    const memberId = await groupUtils.getMemberId(groupId, userIdToAdd);
+    
     await pool
       .request()
       .input("memberId", sql.Int, memberId)
       .input("channelId", sql.Int, channelId)
       .query(addMemberQuery);
 
+    
     return res
       .status(200)
       .json({ message: "Member added to the channel successfully" });
@@ -267,52 +208,33 @@ const removeMember = async (req, res) => {
     const userIdToRemove = req.params.userId;
     const groupId = req.params.groupId;
 
-    const userId = req.user.AccountID;
+    // Validates if the user is an admin
+    if(await groupUtils.isUserGroupAdmin(req.user.AccountID, groupId) == false){
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    // Check if the channel exists in the group
+    if(await groupUtils.isChannelValid(req.params.groupId, channelId) == false){
+      return res.status(404).json({ message: "Channel doesn't exist" });
+    }
+
+    // Check if user is a channel member
+    if(await groupUtils.isUserChannelMember(userIdToRemove, groupId, channelId) == false){
+      return res.status(404).json({ message: "User doesn't exist in the channel" });
+    }
 
     // Get the memberId for the given userIdToRemove within the current group
-    const getMemberIdQuery = `
-            SELECT MemberID
-            FROM GroupMembers
-            WHERE GroupID = @groupId
-            AND AccountID = @userIdToRemove
-        `;
+    const memberId = await groupUtils.getMemberId(groupId, userIdToRemove);
 
-    const pool = await sql.connect(sqlConfig.returnServerConfig());
-    const getMemberIdResult = await pool
-      .request()
-      .input("groupId", sql.Int, groupId)
-      .input("userIdToRemove", sql.Int, userIdToRemove)
-      .query(getMemberIdQuery);
-
-    const memberId = getMemberIdResult.recordset[0]?.MemberID;
-
+    // If the user isn't found return a 404
     if (!memberId) {
       return res.status(404).json({ message: "Member not found in the group" });
     }
 
-    // Check if the user is an admin of the group
-    const isAdminQuery = `
-            SELECT 1
-            FROM GroupMembers GM
-            WHERE GM.GroupID = @groupId
-            AND GM.AccountID = @userId
-            AND GM.Role = 'Admin'
-        `;
+    // Connect to the DB
+    const pool = await sql.connect(sqlConfig.returnServerConfig());
 
-    const isAdminResult = await pool
-      .request()
-      .input("groupId", sql.Int, groupId)
-      .input("userId", sql.Int, userId)
-      .query(isAdminQuery);
-
-    if (isAdminResult.rowsAffected[0] !== 1) {
-      return res.status(403).json({
-        message:
-          "You do not have permission to remove a member from this channel",
-      });
-    }
-    console.log(memberId);
-    // If the user has permission, remove the member from the channel
+    // Remove the member from the channel
     const removeMemberQuery = `
             DELETE FROM ChannelMembers
             WHERE MemberID = @memberId
@@ -338,6 +260,11 @@ const removeMember = async (req, res) => {
 const channelList = async (req, res) => {
   try {
     const { groupId } = req.params;
+
+    // Check to see if the user is a member of the group
+    if(await groupUtils.isUserGroupMember(req.user.AccountID, groupId) == false){
+      return res.status(404).json({ message: "You are not a member of this group" });
+    }
 
     // Query to retrieve a list of channels for the specified group
     const channelListQuery = `
@@ -366,6 +293,16 @@ const channelList = async (req, res) => {
 const channelInfo = async (req, res) => {
   try {
     const { channelId } = req.params;
+
+    // Check to see if the user is a member of the group
+    if(await groupUtils.isUserGroupMember(req.user.AccountID, req.params.groupId) == false){
+      return res.status(403).json({ message: "You are not a member of this group" });
+    }
+
+    // Check if the channel exists in the group
+    if(await groupUtils.isChannelValid(req.params.groupId, channelId) == false){
+      return res.status(404).json({ message: "Channel doesn't exist" });
+    }
 
     // query to retrieve channel information, including visibility and channel ID
     const channelInfoQuery = `

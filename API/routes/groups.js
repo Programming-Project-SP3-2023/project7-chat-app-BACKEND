@@ -10,7 +10,7 @@ const { groupInfo, addMember, removeMember, createGroup, deleteGroup, currentGro
 router.get('/current-groups', authenticateToken, currentGroups);
 
 //get a specific group by group ID
-router.get('/:groupId', groupInfo);
+router.get('/:groupId', authenticateToken, groupInfo);
 
 //add a member to a group
 router.post('/add-member', authenticateToken, addMember);

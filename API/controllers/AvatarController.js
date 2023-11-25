@@ -6,15 +6,34 @@ const sqlConfig = require('../config');
 // Upload an avatar
 const uploadAvatar = async (req, res) => {
     try {
+        const pool = await sql.connect(sqlConfig.returnServerConfig());
 
         // account id from req with token data
         const userId = req.user.AccountID;
 
+        //validate that the user exists
+        result = await pool
+        .request()
+        .input('userId', sql.Int, userId)
+        .query('SELECT * FROM Accounts WHERE AccountID = @userId');
+
+        if(result.recordsets == 0){
+            return res.status(401).json({
+                Message: "User doesn't exist, please try again!"
+            });
+        }   
+
+        //validate that the image data isn't null
+        if(req.body.avatarData == null){
+            return res.status(400).json({
+                Message: "AvatarData is null"
+            });
+        }
+        
         // get the base64 for avatar from req
         const avatarData = req.body.avatarData;
 
         // Check if the user already has an avatar
-        const pool = await sql.connect(sqlConfig.returnServerConfig());
         const existingAvatarResult = await pool
             .request()
             .input('userId', sql.Int, userId)
@@ -48,6 +67,7 @@ const uploadGroupAvatar = async(req, res)=>{
         const groupId = req.body.groupId;
         //get data from req
         const avatarData = req.body.avatarData;
+
         const pool = await sql.connect(sqlConfig.returnServerConfig());
         //check if there is an existing avatar
         const existingAvatarResult = await pool

@@ -17,6 +17,7 @@ const updatePassword = async (req, res, next) => {
         // Get current pw and new pw from the req body
         const currentPassword = req.body.currentPassword;
         const newPassword = req.body.newPassword;
+
         // Connect to db
         const pool = await sql.connect(sqlConfig);
         // Query db to get hashed pw based on user ID
@@ -31,11 +32,19 @@ const updatePassword = async (req, res, next) => {
         const storedPasswordHash = result.recordset[0].PasswordHash;
 
         // Compare hashed current password with the db hash
-        const isPasswordValid = await bcrypt.compare(currentPassword, storedPasswordHash);
+        var isPasswordValid = await bcrypt.compare(currentPassword, storedPasswordHash);
 
         if (!isPasswordValid) {
             return res.status(401).json({ message: 'Invalid password' });
         }
+
+        //check if the new password is the same as the previous
+        isPasswordValid = await bcrypt.compare(newPassword, storedPasswordHash);
+
+        if (isPasswordValid) {
+            return res.status(401).json({ message: 'Password same as the previous' });
+        }
+
         const saltRounds = 10;
         const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
 
@@ -62,6 +71,11 @@ const editDisplayname = async (req, res, next) =>{
         //get new name from request
         const newDisplayName = req.body.newDisplayName;
 
+        //check to see if value is empty
+        if(newDisplayName.length == 0){
+            return res.status(400).json({message: 'Name cannot have a length of 0'});
+        }
+
         //db connection
         const pool = await sql.connect(sqlConfig);
         await pool
@@ -79,14 +93,28 @@ const editDisplayname = async (req, res, next) =>{
     //change Email
     const changeEmail = async (req, res, next) => {
         try {
+            // Connect to the database
+            const pool = await sql.connect(sqlConfig);
+
             // Get ID from the token
             const userId = req.user.AccountID;
     
             // Get new email from the request
             const newEmail = req.body.newEmail;
+
+            //check 
     
-            // Connect to the database
-            const pool = await sql.connect(sqlConfig);
+            //check if email already exists in the database
+            var results = await pool
+                .request()
+                .input('newEmail', sql.NVarChar, newEmail)
+                .query('SELECT * FROM Accounts WHERE Email = @newEmail');
+
+            if(results.recordsets != 0){
+                return res.status(409).json({
+                    message: 'Email is taken' 
+                });
+            }
     
             // Update the email in the database
             await pool
