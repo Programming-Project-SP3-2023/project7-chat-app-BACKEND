@@ -112,7 +112,7 @@ const deleteChannel = async (req, res) => {
     }
 
     // check to see if channel exists
-    if(await isChannelValid(req.params.groupId, channelId) == false){
+    if(await groupUtils.isChannelValid(req.params.groupId, channelId) == false){
       return res.status(404).json({ message: "Channel doesn't exist" });
     }
 
