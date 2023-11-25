@@ -185,9 +185,9 @@ const deleteGroup = async (req, res) => {
     const groupId = req.params.groupId;
     const pool = await sql.connect(sqlConfig.returnServerConfig());
 
-    if(await groupUtils.isUserGroupAdmin(req.user.accountID, groupId) == false){
-      return res.status(403).json({ message: "Unauthorized" });
-    }
+    // if(await groupUtils.isUserGroupAdmin(req.user.accountID, groupId) == false){
+    //   return res.status(403).json({ message: "Unauthorized" });
+    // }
 
     //create a transaction to commit all removals at once
     const transaction = new sql.Transaction(pool);
