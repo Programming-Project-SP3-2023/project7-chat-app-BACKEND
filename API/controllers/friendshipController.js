@@ -4,7 +4,6 @@ const sqlConfig = require('../config');
 const { stringify } = require('querystring');
 const chatData = require('../middleware/chatData');
 
-
 //sends a friend request
 function sendRequest(requesterID, requesteeID, res){
     try{
@@ -202,8 +201,6 @@ async function returnFriendsList(currentUserID, status, res){
                 for(i=0;i<result.rowsAffected;i++){
                     friendships.push(result.recordsets[0][i])
                 }
-
-                console.dir(friendships);
 
                 return res.status(200).json({
                     Message: "OK",
