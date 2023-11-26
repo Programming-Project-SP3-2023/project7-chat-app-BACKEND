@@ -12,16 +12,8 @@ var jsonParser = bodyParser.json()
 router.post('/', jsonParser, (req, res, next) =>{
     
     //encrypt the users password
-    const saltRounds = 10;
     // Generate a 64-character hex value for EmailToken
     const emailToken = crypto.randomBytes(32).toString('hex');
-
-    let hashedPassword = null;
-    bcrypt.genSalt(saltRounds, function(err, salt){
-        bcrypt.hash(req.body.password, salt, function(err, hash){
-            hashedPassword = hash;
-        })
-    })
 
     // create a user from the body content
     const user = {
@@ -54,6 +46,11 @@ router.post('/', jsonParser, (req, res, next) =>{
 
     // submit user to the database
     sql.connect(sqlConfig.returnServerConfig()).then(async function(){
+
+        //encrypt the users password
+        const salt = await bcrypt.genSalt(10)
+        const hashedPassword = await bcrypt.hash(req.body.password, salt);
+
         //check if username  is unique
         var result = await sql.query`SELECT * FROM Logins
                                      WHERE username = ${user.username}`
@@ -86,7 +83,7 @@ router.post('/', jsonParser, (req, res, next) =>{
 
             //insert login details into the database
             result = await sql.query`INSERT INTO Logins (AccountID, Username, PasswordHash) 
-            VALUES (${AccountID.recordset[0].AccountID}, ${user.username}, ${hashedPassword})`
+            VALUES (${AccountID.recordset[0].AccountID}, '${user.username}', '${hashedPassword}')`
 
             // After successfully inserting the user into the database, send the verification email
             sendVerificationEmail(user.email, user.emailToken);
