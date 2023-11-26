@@ -83,7 +83,7 @@ router.post('/', jsonParser, (req, res, next) =>{
 
             //insert login details into the database
             result = await sql.query`INSERT INTO Logins (AccountID, Username, PasswordHash) 
-            VALUES (${AccountID.recordset[0].AccountID}, '${user.username}', '${hashedPassword}')`
+            VALUES (${AccountID.recordset[0].AccountID}, ${user.username}, ${hashedPassword})`
 
             // After successfully inserting the user into the database, send the verification email
             sendVerificationEmail(user.email, user.emailToken);
